@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sellers · K-Card Market</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="panel nav">
+      <div class="brand"><div class="logo"></div><div>K-Card Market<div class="small">Sellers</div></div></div>
+      <button class="hamburger" onclick="toggleMenu()">Menu</button>
+      <nav class="navlinks">
+        <a data-nav href="index.html">Home</a>
+        <a data-nav href="browse.html">Browse</a>
+        <a data-nav href="seller.html">Sellers</a>
+        <a data-nav href="dashboard.html">Sell</a>
+        <a data-nav href="about.html">About</a>
+      </nav>
+      <div class="nav-cta">
+        <a class="btn primary" href="dashboard.html">Seller dashboard</a>
+      </div>
+    </header>
+
+    <section class="panel card" style="margin-top:18px">
+      <div class="badge">Verified seller</div>
+      <h2 style="margin:10px 0 6px 0">MinCardShop</h2>
+      <p class="small">Rating: 4.9 · 1,203 sales · Ships from: New Jersey, USA</p>
+      <div class="grid" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="card"><h3>Policies</h3><p class="small">Sleeved + toploader, photos provided.</p></div>
+        <div class="card"><h3>Shipping</h3><p class="small">Stamped or tracked options.</p></div>
+        <div class="card"><h3>Contact</h3><p class="small">Messaging enabled (later feature).</p></div>
+      </div>
+    </section>
+
+    <section class="panel card" style="margin-top:14px">
+      <h3 class="section-title">Listings</h3>
+      <div class="list">
+        <a class="panel rowitem" href="item.html">
+          <div class="left"><div class="thumb"></div>
+            <div>
+              <div class="title">SEVENTEEN · FML · Weverse POB · Mingyu (R1)</div>
+              <div class="meta">Condition: NM · Qty: 2</div>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div class="price">$9.00</div>
+            <div class="pill">View</div>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <footer class="footer">© <span id="y"></span> K-Card Market</footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+</body>
+</html>
