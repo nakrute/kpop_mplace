@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard · K-Card Market</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="panel nav">
+      <div class="brand"><div class="logo"></div><div>K-Card Market<div class="small">Seller dashboard</div></div></div>
+      <button class="hamburger" onclick="toggleMenu()">Menu</button>
+      <nav class="navlinks">
+        <a data-nav href="index.html">Home</a>
+        <a data-nav href="browse.html">Browse</a>
+        <a data-nav href="seller.html">Sellers</a>
+        <a data-nav href="dashboard.html">Sell</a>
+        <a data-nav href="about.html">About</a>
+      </nav>
+      <div class="nav-cta">
+        <a class="btn" href="browse.html">Browse</a>
+      </div>
+    </header>
+
+    <section class="two-col">
+      <div class="panel card">
+        <h2 style="margin:0 0 8px 0">Create a listing</h2>
+        <p class="small">For now this is a form layout — wire it to your database later.</p>
+
+        <div style="display:grid; gap:10px; margin-top:12px">
+          <input class="input" placeholder="Search catalog item (e.g., 'Mingyu Weverse POB')" />
+          <div style="display:flex; gap:10px; flex-wrap:wrap">
+            <select style="max-width:220px">
+              <option>Condition</option>
+              <option>Mint</option>
+              <option>Near Mint</option>
+              <option>Good</option>
+              <option>Damaged</option>
+            </select>
+            <input class="input" style="max-width:200px" placeholder="Price (USD)" />
+            <input class="input" style="max-width:200px" placeholder="Quantity" />
+          </div>
+          <input class="input" placeholder="Shipping (e.g., $1.50 stamped / $4 tracked)" />
+          <input class="input" placeholder="Photo upload (add later)" />
+          <a class="btn primary" href="#">Publish listing</a>
+        </div>
+      </div>
+
+      <aside class="panel card">
+        <h3 class="section-title">Your listings</h3>
+        <div class="list">
+          <div class="panel rowitem">
+            <div class="left"><div class="thumb"></div>
+              <div>
+                <div class="title">SEVENTEEN · FML · Weverse POB · Mingyu (R1)</div>
+                <div class="meta">NM · $9.00 · Qty 2</div>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px">
+              <a class="btn" href="#">Edit</a>
+              <a class="btn" href="#">Pause</a>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="panel card" style="margin-top:14px">
+      <h3 class="section-title">Orders</h3>
+      <table class="table">
+        <thead><tr><th>Order</th><th>Status</th><th>Total</th><th>Date</th></tr></thead>
+        <tbody>
+          <tr><td>#1042</td><td>Paid</td><td>$12.50</td><td>—</td></tr>
+          <tr><td>#1041</td><td>Shipped</td><td>$18.00</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="footer">© <span id="y"></span> K-Card Market</footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+</body>
+</html>
