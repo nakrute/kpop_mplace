@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>About · K-Card Market</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="panel nav">
+      <div class="brand"><div class="logo"></div><div>K-Card Market<div class="small">About</div></div></div>
+      <button class="hamburger" onclick="toggleMenu()">Menu</button>
+      <nav class="navlinks">
+        <a data-nav href="index.html">Home</a>
+        <a data-nav href="browse.html">Browse</a>
+        <a data-nav href="seller.html">Sellers</a>
+        <a data-nav href="dashboard.html">Sell</a>
+        <a data-nav href="about.html">About</a>
+      </nav>
+      <div class="nav-cta">
+        <a class="btn primary" href="browse.html">Browse</a>
+      </div>
+    </header>
+
+    <main class="panel card" style="margin-top:18px">
+      <h2 style="margin:0 0 8px 0">How it works</h2>
+      <p class="small">
+        This site is built “catalog-first”: every photocard has a shared catalog entry, and sellers attach listings to it.
+        That keeps search clean and makes price comparison easy.
+      </p>
+
+      <div class="grid" style="grid-template-columns:1fr 1fr;">
+        <div class="card">
+          <h3>Buyers</h3>
+          <p class="small">Search by group/album/member/POB, compare listings, checkout securely.</p>
+        </div>
+        <div class="card">
+          <h3>Sellers</h3>
+          <p class="small">Create listings quickly, set shipping rules, get paid out automatically.</p>
+        </div>
+      </div>
+
+      <h3 style="margin-top:16px">Next features</h3>
+      <ul class="small">
+        <li>Wishlist & set builder</li>
+        <li>Price history & sold data</li>
+        <li>Catalog submission + verification queue</li>
+        <li>Messaging and bundle discounts</li>
+      </ul>
+    </main>
+
+    <footer class="footer">© <span id="y"></span> K-Card Market</footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+</body>
+</html>
