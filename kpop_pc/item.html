@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Item · K-Card Market</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="panel nav">
+      <div class="brand"><div class="logo"></div><div>K-Card Market<div class="small">Item</div></div></div>
+      <button class="hamburger" onclick="toggleMenu()">Menu</button>
+      <nav class="navlinks">
+        <a data-nav href="index.html">Home</a>
+        <a data-nav href="browse.html">Browse</a>
+        <a data-nav href="seller.html">Sellers</a>
+        <a data-nav href="dashboard.html">Sell</a>
+        <a data-nav href="about.html">About</a>
+      </nav>
+      <div class="nav-cta">
+        <a class="btn" href="browse.html">Back</a>
+        <a class="btn primary" href="dashboard.html">Sell this</a>
+      </div>
+    </header>
+
+    <section class="two-col">
+      <div class="panel card">
+        <div class="badge">Verified catalog entry</div>
+        <h2 style="margin:10px 0 8px 0">SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)</h2>
+        <p class="small">Type: POB · Store: Weverse · Region: KR · Notes: Round 1</p>
+
+        <div class="grid" style="grid-template-columns:1fr 1fr;">
+          <div class="card">
+            <h3>Price stats</h3>
+            <p class="small">Lowest: $9.00 · Median: $12.50 · High: $22.00</p>
+          </div>
+          <div class="card">
+            <h3>Reference</h3>
+            <p class="small">Add official scans later (or community uploads).</p>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel card">
+        <h3 class="section-title">Quick actions</h3>
+        <a class="btn primary" style="width:100%" href="dashboard.html">Create a listing</a>
+        <div style="height:10px"></div>
+        <a class="btn" style="width:100%" href="seller.html">Browse sellers</a>
+        <p class="small" style="margin-top:12px">Later: wishlist + set tracking.</p>
+      </aside>
+    </section>
+
+    <section class="panel card" style="margin-top:14px">
+      <h3 class="section-title">Active listings</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Seller</th>
+            <th>Condition</th>
+            <th>Price</th>
+            <th>Shipping</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="seller.html">MinCardShop</a></td>
+            <td>NM</td>
+            <td>$9.00</td>
+            <td>$1.50</td>
+            <td><a class="btn primary" href="#">Add</a></td>
+          </tr>
+          <tr>
+            <td><a href="seller.html">KpopBay</a></td>
+            <td>Mint</td>
+            <td>$11.00</td>
+            <td>$2.00</td>
+            <td><a class="btn primary" href="#">Add</a></td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="small" style="margin-top:10px">(Cart/checkout comes later — this is just the page layout.)</p>
+    </section>
+
+    <footer class="footer">© <span id="y"></span> K-Card Market</footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+</body>
+</html>
