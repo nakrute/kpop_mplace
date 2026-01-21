@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>K-Card Market</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="panel nav">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          K-Card Market
+          <div class="small">Buy & sell K-pop photocards</div>
+        </div>
+      </div>
+
+      <button class="hamburger" onclick="toggleMenu()">Menu</button>
+
+      <nav class="navlinks">
+        <a data-nav href="index.html">Home</a>
+        <a data-nav href="browse.html">Browse</a>
+        <a data-nav href="seller.html">Sellers</a>
+        <a data-nav href="dashboard.html">Sell</a>
+        <a data-nav href="about.html">About</a>
+      </nav>
+
+      <div class="nav-cta">
+        <a class="btn" href="browse.html">Search</a>
+        <a class="btn primary" href="dashboard.html">List a card</a>
+      </div>
+    </header>
+
+    <main class="panel hero">
+      <div>
+        <span class="badge">Catalog + marketplace</span>
+        <h1>Find the exact photocard you want — fast.</h1>
+        <p>
+          Browse verified catalog entries (group • album • version • member • POB),
+          then compare listings across sellers in one place.
+        </p>
+
+        <div class="actions">
+          <a class="btn primary" href="browse.html">Browse catalog</a>
+          <a class="btn" href="dashboard.html">Start selling</a>
+          <a class="btn" href="about.html">How it works</a>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <h3>Catalog-first</h3>
+            <p>Listings attach to a shared card entry so search stays clean.</p>
+          </div>
+          <div class="card">
+            <h3>Simple fees</h3>
+            <p>Buyer pays item + shipping, sellers get paid out automatically.</p>
+          </div>
+          <div class="card">
+            <h3>Trust signals</h3>
+            <p>Seller ratings, verified listings, and dispute support.</p>
+          </div>
+        </div>
+      </div>
+
+      <aside class="card">
+        <h3 class="section-title">Today’s snapshot</h3>
+        <div class="kpi">
+          <div class="row"><div class="lbl">Active listings</div><div class="num">2,418</div></div>
+          <div class="row"><div class="lbl">Verified items</div><div class="num">816</div></div>
+          <div class="row"><div class="lbl">Top groups</div><div class="num">SVT • SKZ • TWICE</div></div>
+        </div>
+        <div style="margin-top:14px" class="small">
+          (Demo numbers — replace with live stats later.)
+        </div>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      © <span id="y"></span> K-Card Market · <a href="about.html">Policies</a>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+</body>
+</html>
