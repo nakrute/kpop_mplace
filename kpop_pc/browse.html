@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Browse · K-Card Market</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="panel nav">
+      <div class="brand"><div class="logo"></div><div>K-Card Market<div class="small">Browse</div></div></div>
+      <button class="hamburger" onclick="toggleMenu()">Menu</button>
+      <nav class="navlinks">
+        <a data-nav href="index.html">Home</a>
+        <a data-nav href="browse.html">Browse</a>
+        <a data-nav href="seller.html">Sellers</a>
+        <a data-nav href="dashboard.html">Sell</a>
+        <a data-nav href="about.html">About</a>
+      </nav>
+      <div class="nav-cta">
+        <a class="btn primary" href="dashboard.html">List a card</a>
+      </div>
+    </header>
+
+    <section class="panel toolbar">
+      <div class="filters">
+        <input class="input" placeholder="Search: group, album, member, store POB…" />
+        <select>
+          <option>Any group</option>
+          <option>SEVENTEEN</option>
+          <option>Stray Kids</option>
+          <option>TWICE</option>
+        </select>
+        <select>
+          <option>Any type</option>
+          <option>Album PC</option>
+          <option>POB</option>
+          <option>Lucky Draw</option>
+          <option>Broadcast</option>
+        </select>
+      </div>
+      <div class="small">Tip: click an item to view listings</div>
+    </section>
+
+    <section class="list">
+      <a class="panel rowitem" href="item.html">
+        <div class="left">
+          <div class="thumb"></div>
+          <div>
+            <div class="title">SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)</div>
+            <div class="meta">Verified · 18 listings · Ships from US/KR/PH</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="price">From $9.00</div>
+          <div class="pill">View</div>
+        </div>
+      </a>
+
+      <a class="panel rowitem" href="item.html">
+        <div class="left">
+          <div class="thumb"></div>
+          <div>
+            <div class="title">Stray Kids · 5-STAR · Album PC · Hyunjin (Ver. B)</div>
+            <div class="meta">Unverified · 7 listings</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="price">From $6.50</div>
+          <div class="pill">View</div>
+        </div>
+      </a>
+    </section>
+
+    <footer class="footer">© <span id="y"></span> K-Card Market</footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+</body>
+</html>
