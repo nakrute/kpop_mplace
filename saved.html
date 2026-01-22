@@ -13,12 +13,12 @@
         <div class="logo"></div>
         <div>
           K-Card Market
-          <div class="small" id="pageSubtitle">PAGE_SUBTITLE</div>
+          <div class="small" id="pageSubtitle">Saved</div>
         </div>
       </div>
-    
+
       <button class="hamburger" onclick="toggleMenu()">Menu</button>
-    
+
       <nav class="navlinks">
         <a data-nav href="index.html">Home</a>
         <a data-nav href="browse.html">Browse</a>
@@ -28,7 +28,7 @@
         <a data-nav href="dashboard.html">Sell</a>
         <a data-nav href="about.html">About</a>
       </nav>
-    
+
       <div class="nav-cta">
         <a class="btn" href="checkout.html">Checkout</a>
         <a class="btn primary" href="dashboard.html">List a card</a>
@@ -36,16 +36,15 @@
     </header>
 
     <section class="panel card" style="margin-top:18px">
-      <h2 style="margin:0 0 8px 0">Saved items</h2>
-      <p class="small" style="margin:0">Your wishlist is stored in this browser (localStorage).</p>
-    </section>
+      <h2 style="margin:0 0 8px 0">Your saved cards</h2>
+      <p class="small" style="margin:0">Anything you ❤️ on Browse or Item pages shows up here.</p>
 
-    <section id="savedEmpty" class="panel card" style="margin-top:14px; display:none;">
-      <h3 style="margin:0 0 6px 0;">Nothing saved yet</h3>
-      <p class="small" style="margin:0;">Go to Browse and tap ♡ to save items you want.</p>
-    </section>
+      <div id="savedEmpty" class="cart-empty" style="margin-top:14px;">
+        You haven’t saved any cards yet.
+      </div>
 
-    <section id="savedList" class="saved-grid"></section>
+      <div id="savedList" class="saved-grid"></div>
+    </section>
 
     <footer class="footer">© <span id="y"></span> K-Card Market</footer>
   </div>

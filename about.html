@@ -13,12 +13,12 @@
         <div class="logo"></div>
         <div>
           K-Card Market
-          <div class="small" id="pageSubtitle">PAGE_SUBTITLE</div>
+          <div class="small" id="pageSubtitle">About</div>
         </div>
       </div>
-    
+
       <button class="hamburger" onclick="toggleMenu()">Menu</button>
-    
+
       <nav class="navlinks">
         <a data-nav href="index.html">Home</a>
         <a data-nav href="browse.html">Browse</a>
@@ -28,39 +28,42 @@
         <a data-nav href="dashboard.html">Sell</a>
         <a data-nav href="about.html">About</a>
       </nav>
-    
+
       <div class="nav-cta">
         <a class="btn" href="checkout.html">Checkout</a>
         <a class="btn primary" href="dashboard.html">List a card</a>
       </div>
     </header>
 
-    <main class="panel card" style="margin-top:18px">
-      <h2 style="margin:0 0 8px 0">How it works</h2>
-      <p class="small">
-        This site is built “catalog-first”: every photocard has a shared catalog entry, and sellers attach listings to it.
-        That keeps search clean and makes price comparison easy.
+    <section class="panel card" style="margin-top:18px">
+      <h2 style="margin:0 0 8px 0">About K-Card Market</h2>
+      <p class="small" style="margin:0">
+        K-Card Market is a demo marketplace concept for buying/selling K-pop photocards
+        with a TCGplayer-style browsing experience. This site currently uses localStorage
+        for wishlist, cart, requests, and demo orders.
       </p>
 
-      <div class="grid" style="grid-template-columns:1fr 1fr;">
+      <div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px;">
         <div class="card">
-          <h3>Buyers</h3>
-          <p class="small">Search by group/album/member/POB, compare listings, checkout securely.</p>
+          <h3>What’s working now</h3>
+          <p class="small">
+            Browse + filters + sorting, wishlist, cart drawer, checkout demo, and a seller dashboard demo.
+          </p>
         </div>
         <div class="card">
-          <h3>Sellers</h3>
-          <p class="small">Create listings quickly, set shipping rules, get paid out automatically.</p>
+          <h3>What’s next</h3>
+          <p class="small">
+            Supabase Auth, catalog + listings tables, seller profiles, real images, and real checkout via Stripe.
+          </p>
         </div>
       </div>
 
-      <h3 style="margin-top:16px">Next features</h3>
-      <ul class="small">
-        <li>Wishlist & set builder</li>
-        <li>Price history & sold data</li>
-        <li>Catalog submission + verification queue</li>
-        <li>Messaging and bundle discounts</li>
-      </ul>
-    </main>
+      <div class="chips" style="margin-top:12px;">
+        <span class="chip">Demo</span>
+        <span class="chip">GitHub Pages</span>
+        <span class="chip">LocalStorage</span>
+      </div>
+    </section>
 
     <footer class="footer">© <span id="y"></span> K-Card Market</footer>
   </div>
