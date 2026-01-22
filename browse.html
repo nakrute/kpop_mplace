@@ -9,8 +9,16 @@
 <body>
   <div class="container">
     <header class="panel nav">
-      <div class="brand"><div class="logo"></div><div>K-Card Market<div class="small">Browse</div></div></div>
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          K-Card Market
+          <div class="small">Browse</div>
+        </div>
+      </div>
+
       <button class="hamburger" onclick="toggleMenu()">Menu</button>
+
       <nav class="navlinks">
         <a data-nav href="index.html">Home</a>
         <a data-nav href="browse.html">Browse</a>
@@ -18,6 +26,7 @@
         <a data-nav href="dashboard.html">Sell</a>
         <a data-nav href="about.html">About</a>
       </nav>
+
       <div class="nav-cta">
         <a class="btn primary" href="dashboard.html">List a card</a>
       </div>
@@ -25,26 +34,48 @@
 
     <section class="panel toolbar">
       <div class="filters">
-        <input class="input" placeholder="Search: group, album, member, store POB…" />
-        <select>
-          <option>Any group</option>
-          <option>SEVENTEEN</option>
-          <option>Stray Kids</option>
-          <option>TWICE</option>
+        <input
+          id="searchInput"
+          class="input"
+          placeholder="Search: group, album, member, store POB…"
+          aria-label="Search"
+        />
+
+        <select id="groupFilter" aria-label="Group filter">
+          <option value="">Any group</option>
+          <option value="seventeen">SEVENTEEN</option>
+          <option value="stray kids">Stray Kids</option>
+          <option value="twice">TWICE</option>
         </select>
-        <select>
-          <option>Any type</option>
-          <option>Album PC</option>
-          <option>POB</option>
-          <option>Lucky Draw</option>
-          <option>Broadcast</option>
+
+        <select id="typeFilter" aria-label="Type filter">
+          <option value="">Any type</option>
+          <option value="album pc">Album PC</option>
+          <option value="pob">POB</option>
+          <option value="lucky draw">Lucky Draw</option>
+          <option value="broadcast">Broadcast</option>
         </select>
       </div>
-      <div class="small">Tip: click an item to view listings</div>
+
+      <div class="small">
+        Tip: change filters — results update instantly
+      </div>
     </section>
 
-    <section class="list">
-      <a class="panel rowitem" href="item.html">
+    <!-- Optional: a tiny “no results” message -->
+    <section id="noResults" class="panel card" style="margin-top:14px; display:none;">
+      <h3 style="margin:0 0 6px 0;">No matches</h3>
+      <p class="small" style="margin:0;">Try clearing filters or searching a broader term.</p>
+    </section>
+
+    <section id="browseList" class="list">
+      <a
+        class="panel rowitem"
+        href="item.html"
+        data-group="seventeen"
+        data-type="pob"
+        data-text="seventeen fml weverse pob mingyu round 1 verified 18 listings ships from us kr ph"
+      >
         <div class="left">
           <div class="thumb"></div>
           <div>
@@ -58,25 +89,14 @@
         </div>
       </a>
 
-      <a class="panel rowitem" href="item.html">
+      <a
+        class="panel rowitem"
+        href="item.html"
+        data-group="stray kids"
+        data-type="album pc"
+        data-text="stray kids 5-star album pc hyunjin ver b unverified 7 listings"
+      >
         <div class="left">
           <div class="thumb"></div>
           <div>
-            <div class="title">Stray Kids · 5-STAR · Album PC · Hyunjin (Ver. B)</div>
-            <div class="meta">Unverified · 7 listings</div>
-          </div>
-        </div>
-        <div style="text-align:right">
-          <div class="price">From $6.50</div>
-          <div class="pill">View</div>
-        </div>
-      </a>
-    </section>
-
-    <footer class="footer">© <span id="y"></span> K-Card Market</footer>
-  </div>
-
-  <script src="app.js"></script>
-  <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
-</body>
-</html>
+            <div class="title">Stray Kids · 5-STAR · Album
