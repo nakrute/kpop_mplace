@@ -54,11 +54,8 @@ function isSaved(id) {
 
 function toggleSaved(item) {
   const wl = getWishlist();
-  if (wl[item.id]) {
-    delete wl[item.id];
-  } else {
-    wl[item.id] = item; // store minimal data
-  }
+  if (wl[item.id]) delete wl[item.id];
+  else wl[item.id] = item;
   setWishlist(wl);
   return wl;
 }
@@ -126,20 +123,18 @@ function applyBrowseFilters() {
 }
 
 /* ---------------------------
-   Wire up wishlist buttons
+   Wishlist wiring
 ---------------------------- */
 function initBrowseWishlistButtons() {
   const listEl = document.getElementById("browseList");
   if (!listEl) return;
 
-  // Set initial heart states
   listEl.querySelectorAll(".rowitem[data-id]").forEach((row) => {
     const id = row.dataset.id;
     const btn = row.querySelector("[data-save-btn]");
     updateHeartButton(btn, isSaved(id));
   });
 
-  // Handle heart clicks (event delegation)
   listEl.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-save-btn]");
     if (!btn) return;
@@ -201,7 +196,6 @@ function renderSavedPage() {
   }
   emptyEl.style.display = "none";
 
-  // Sort saved items newest-first if date exists
   items.sort((a, b) => toTime(b.date) - toTime(a.date));
 
   for (const it of items) {
@@ -223,7 +217,6 @@ function renderSavedPage() {
       </div>
     `;
 
-    // Remove handler
     const heart = card.querySelector(".heart");
     heart.addEventListener("click", () => {
       const wl2 = getWishlist();
@@ -236,7 +229,244 @@ function renderSavedPage() {
   }
 }
 
+/* ---------------------------
+   Cart (localStorage) + Drawer UI
+---------------------------- */
+const CART_KEY = "kcard_cart_v1";
+
+function getCart() {
+  try {
+    const raw = localStorage.getItem(CART_KEY);
+    return raw ? JSON.parse(raw) : { items: [] };
+  } catch {
+    return { items: [] };
+  }
+}
+
+function setCart(cart) {
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+}
+
+function cartCount(cart = getCart()) {
+  return (cart.items || []).reduce((sum, it) => sum + (it.qty || 0), 0);
+}
+
+function money(n) {
+  const x = Number(n);
+  return Number.isFinite(x) ? x.toFixed(2) : "0.00";
+}
+
+function ensureCartUI() {
+  if (document.getElementById("cartOverlay")) return;
+
+  const overlay = document.createElement("div");
+  overlay.id = "cartOverlay";
+  overlay.className = "cart-overlay";
+  overlay.addEventListener("click", closeCart);
+
+  const drawer = document.createElement("div");
+  drawer.id = "cartDrawer";
+  drawer.className = "cart-drawer";
+
+  drawer.innerHTML = `
+    <div class="cart-header">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="font-weight:900;">Your cart</div>
+        <span class="badge" id="cartBadge">0 items</span>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="btn" type="button" id="cartClearBtn">Clear</button>
+        <button class="btn" type="button" id="cartCloseBtn">Close</button>
+      </div>
+    </div>
+    <div class="cart-body" id="cartBody"></div>
+    <div class="cart-footer">
+      <div class="cart-row">
+        <div class="small">Subtotal</div>
+        <div style="font-weight:900;" id="cartSubtotal">$0.00</div>
+      </div>
+      <button class="btn primary" type="button" id="fakeCheckoutBtn">Checkout (demo)</button>
+      <div class="small">Demo cart only — no payment yet.</div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(drawer);
+
+  // Floating cart button
+  const fab = document.createElement("button");
+  fab.id = "cartFab";
+  fab.className = "cart-fab";
+  fab.type = "button";
+  fab.innerHTML = `<span style="font-size:18px;">🛒</span> <span class="small">Cart</span> <span class="cart-dot" id="cartCountDot">0</span>`;
+  fab.addEventListener("click", openCart);
+  document.body.appendChild(fab);
+
+  // Drawer controls
+  drawer.querySelector("#cartCloseBtn").addEventListener("click", closeCart);
+  drawer.querySelector("#cartClearBtn").addEventListener("click", () => {
+    setCart({ items: [] });
+    renderCart();
+    updateCartCountUI();
+  });
+
+  drawer.querySelector("#fakeCheckoutBtn").addEventListener("click", () => {
+    alert("Demo checkout — next step is Stripe + Supabase!");
+  });
+}
+
+function openCart() {
+  ensureCartUI();
+  const overlay = document.getElementById("cartOverlay");
+  const drawer = document.getElementById("cartDrawer");
+  overlay.style.display = "block";
+  requestAnimationFrame(() => drawer.classList.add("open"));
+  renderCart();
+}
+
+function closeCart() {
+  const overlay = document.getElementById("cartOverlay");
+  const drawer = document.getElementById("cartDrawer");
+  if (!overlay || !drawer) return;
+  drawer.classList.remove("open");
+  setTimeout(() => {
+    overlay.style.display = "none";
+  }, 220);
+}
+
+function updateCartCountUI() {
+  ensureCartUI();
+  const dot = document.getElementById("cartCountDot");
+  const cart = getCart();
+  const c = cartCount(cart);
+  if (dot) dot.textContent = String(c);
+  const badge = document.getElementById("cartBadge");
+  if (badge) badge.textContent = `${c} item${c === 1 ? "" : "s"}`;
+}
+
+function addToCart(line) {
+  const cart = getCart();
+  cart.items = cart.items || [];
+
+  // key by listing id (seller + card id + price/shipping)
+  const key = line.key;
+  const existing = cart.items.find((x) => x.key === key);
+
+  if (existing) existing.qty += 1;
+  else cart.items.push({ ...line, qty: 1 });
+
+  setCart(cart);
+  updateCartCountUI();
+  openCart();
+}
+
+function changeQty(key, delta) {
+  const cart = getCart();
+  cart.items = (cart.items || []).map((it) => {
+    if (it.key !== key) return it;
+    return { ...it, qty: Math.max(0, (it.qty || 0) + delta) };
+  }).filter((it) => (it.qty || 0) > 0);
+
+  setCart(cart);
+  renderCart();
+  updateCartCountUI();
+}
+
+function removeLine(key) {
+  const cart = getCart();
+  cart.items = (cart.items || []).filter((it) => it.key !== key);
+  setCart(cart);
+  renderCart();
+  updateCartCountUI();
+}
+
+function cartSubtotal(cart = getCart()) {
+  return (cart.items || []).reduce((sum, it) => {
+    const price = Number(it.price) || 0;
+    const ship = Number(it.shipping) || 0;
+    return sum + (price + ship) * (it.qty || 0);
+  }, 0);
+}
+
+function renderCart() {
+  ensureCartUI();
+  const body = document.getElementById("cartBody");
+  const subtotalEl = document.getElementById("cartSubtotal");
+  const cart = getCart();
+  const items = cart.items || [];
+
+  if (!body || !subtotalEl) return;
+
+  body.innerHTML = "";
+
+  if (items.length === 0) {
+    body.innerHTML = `<div class="cart-empty">Your cart is empty. Add a listing to see it here.</div>`;
+    subtotalEl.textContent = `$0.00`;
+    return;
+  }
+
+  for (const it of items) {
+    const row = document.createElement("div");
+    row.className = "cart-item";
+    row.innerHTML = `
+      <div class="thumb"></div>
+      <div class="ci-main">
+        <div class="ci-title">${it.title}</div>
+        <div class="ci-meta">${it.seller ? `Seller: ${it.seller}` : ""}${it.seller ? " · " : ""}Item $${money(it.price)} · Ship $${money(it.shipping)}</div>
+        <div class="qty">
+          <button type="button" aria-label="Decrease">−</button>
+          <span>${it.qty}</span>
+          <button type="button" aria-label="Increase">+</button>
+          <button type="button" class="btn" style="margin-left:auto;">Remove</button>
+        </div>
+      </div>
+    `;
+
+    const [decBtn, incBtn, removeBtn] = row.querySelectorAll(".qty button");
+    decBtn.addEventListener("click", () => changeQty(it.key, -1));
+    incBtn.addEventListener("click", () => changeQty(it.key, +1));
+    removeBtn.addEventListener("click", () => removeLine(it.key));
+
+    body.appendChild(row);
+  }
+
+  subtotalEl.textContent = `$${money(cartSubtotal(cart))}`;
+}
+
+/* ---------------------------
+   Hook "Add to cart" buttons
+---------------------------- */
+function initAddToCartButtons() {
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-add-cart]");
+    if (!btn) return;
+
+    e.preventDefault();
+
+    const title = btn.dataset.itemTitle || "Listing";
+    const seller = btn.dataset.itemSeller || "";
+    const price = btn.dataset.itemPrice || "0";
+    const shipping = btn.dataset.itemShipping || "0";
+    const cardId = btn.dataset.cardId || "card";
+    const sellerKey = seller ? norm(seller).replace(/\s+/g, "-") : "seller";
+    const key = `${cardId}__${sellerKey}__${price}__${shipping}`;
+
+    addToCart({
+      key,
+      cardId,
+      title,
+      seller,
+      price,
+      shipping
+    });
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  // Always ensure cart UI exists + count is correct
+  ensureCartUI();
+  updateCartCountUI();
+
   // Browse: filters + sorting
   const searchEl = document.getElementById("searchInput");
   const groupEl = document.getElementById("groupFilter");
@@ -263,8 +493,11 @@ document.addEventListener("DOMContentLoaded", () => {
     applyBrowseFilters();
   }
 
-  // Wishlist wiring
+  // Wishlist
   initBrowseWishlistButtons();
   initItemWishlistButton();
   renderSavedPage();
+
+  // Cart
+  initAddToCartButtons();
 });
