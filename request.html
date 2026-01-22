@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Request · K-Card Market</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="panel nav">
+      <div class="brand"><div class="logo"></div><div>K-Card Market<div class="small">Request a card</div></div></div>
+      <button class="hamburger" onclick="toggleMenu()">Menu</button>
+      <nav class="navlinks">
+        <a data-nav href="index.html">Home</a>
+        <a data-nav href="browse.html">Browse</a>
+        <a data-nav href="saved.html">Saved</a>
+        <a data-nav href="request.html">Request</a>
+        <a data-nav href="dashboard.html">Sell</a>
+        <a data-nav href="about.html">About</a>
+      </nav>
+      <div class="nav-cta">
+        <a class="btn" href="browse.html">Back to browse</a>
+      </div>
+    </header>
+
+    <section class="panel card" style="margin-top:18px">
+      <h2 style="margin:0 0 8px 0">Request a catalog entry (demo)</h2>
+      <p class="small" style="margin:0">Saved locally in your browser. Later this becomes a real submission queue.</p>
+
+      <form class="form" id="requestForm">
+        <div class="row">
+          <input id="rq_group" class="input" placeholder="Group (e.g., SEVENTEEN)" required />
+          <input id="rq_album" class="input" placeholder="Album/Release (e.g., FML)" required />
+        </div>
+        <div class="row">
+          <input id="rq_member" class="input" placeholder="Member" />
+          <input id="rq_type" class="input" placeholder="Type (POB / Album PC / Lucky Draw…)" />
+        </div>
+        <div class="row">
+          <input id="rq_store" class="input" placeholder="Store (Weverse / Ktown4u / …)" />
+          <input id="rq_round" class="input" placeholder="Round (if applicable)" />
+        </div>
+        <input id="rq_notes" class="input" placeholder="Notes / link to reference scan (optional)" />
+        <button class="btn primary" type="submit">Submit request</button>
+        <div id="requestMsg" class="small"></div>
+      </form>
+    </section>
+
+    <footer class="footer">© <span id="y"></span> K-Card Market</footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checkout · K-Card Market</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="panel nav">
+      <div class="brand"><div class="logo"></div><div>K-Card Market<div class="small">Checkout</div></div></div>
+      <button class="hamburger" onclick="toggleMenu()">Menu</button>
+      <nav class="navlinks">
+        <a data-nav href="index.html">Home</a>
+        <a data-nav href="browse.html">Browse</a>
+        <a data-nav href="saved.html">Saved</a>
+        <a data-nav href="request.html">Request</a>
+        <a data-nav href="dashboard.html">Sell</a>
+        <a data-nav href="about.html">About</a>
+      </nav>
+      <div class="nav-cta">
+        <a class="btn" href="browse.html">Continue shopping</a>
+      </div>
+    </header>
+
+    <section class="two-col" style="margin-top:18px">
+      <div class="panel card">
+        <h2 style="margin:0 0 8px 0">Shipping info (demo)</h2>
+        <p class="small" style="margin:0">Stored locally in your browser.</p>
+
+        <form class="form" id="checkoutForm">
+          <input id="name" class="input" placeholder="Full name" required />
+          <input id="email" class="input" placeholder="Email" type="email" required />
+          <input id="address1" class="input" placeholder="Address line 1" required />
+          <input id="address2" class="input" placeholder="Address line 2 (optional)" />
+          <div class="row">
+            <input id="city" class="input" placeholder="City" required />
+            <input id="state" class="input" placeholder="State" required />
+          </div>
+          <div class="row">
+            <input id="zip" class="input" placeholder="ZIP" required />
+            <input id="country" class="input" placeholder="Country" value="USA" required />
+          </div>
+
+          <button class="btn primary" type="submit">Place order (demo)</button>
+        </form>
+      </div>
+
+      <aside class="panel card">
+        <div id="checkoutSummary"></div>
+      </aside>
+    </section>
+
+    <footer class="footer">© <span id="y"></span> K-Card Market</footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+</body>
+</html>

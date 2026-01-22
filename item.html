@@ -23,6 +23,7 @@
         <a data-nav href="index.html">Home</a>
         <a data-nav href="browse.html">Browse</a>
         <a data-nav href="saved.html">Saved</a>
+        <a data-nav href="request.html">Request</a>
         <a data-nav href="seller.html">Sellers</a>
         <a data-nav href="dashboard.html">Sell</a>
         <a data-nav href="about.html">About</a>
@@ -30,28 +31,31 @@
 
       <div class="nav-cta">
         <a class="btn" href="browse.html">Back</a>
-        <a class="btn" href="saved.html">Saved</a>
+        <a class="btn" href="checkout.html">Checkout</a>
         <a class="btn primary" href="dashboard.html">Sell this</a>
       </div>
     </header>
 
-    <!-- Item identity for wishlist + cart -->
     <section
       class="two-col"
       id="itemMeta"
       data-id="svt-fml-weverse-pob-mingyu-r1"
       data-title="SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)"
       data-href="item.html"
+      data-img="https://placehold.co/256x256/png?text=SVT"
     >
       <div class="panel card">
         <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-          <div>
-            <div class="badge">Verified catalog entry</div>
-            <h2 style="margin:10px 0 8px 0">SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)</h2>
-            <p class="small">Type: POB · Store: Weverse · Region: KR · Notes: Round 1</p>
+          <div style="display:flex; gap:12px; align-items:flex-start;">
+            <img class="thumbimg" alt="thumb" style="width:72px;height:72px;border-radius:18px;"
+                 src="https://placehold.co/256x256/png?text=SVT" />
+            <div>
+              <div class="badge">Verified catalog entry</div>
+              <h2 style="margin:10px 0 8px 0">SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)</h2>
+              <p class="small" style="margin:0;">Type: POB · Store: Weverse · Region: KR · Notes: Round 1</p>
+            </div>
           </div>
 
-          <!-- Wishlist button -->
           <button class="heart" type="button" aria-label="Save item" id="itemSaveBtn">♡</button>
         </div>
 
@@ -61,15 +65,27 @@
             <p class="small">Lowest: $9.00 · Median: $12.50 · High: $22.00</p>
           </div>
           <div class="card">
-            <h3>Reference</h3>
-            <p class="small">Add official scans later (or community uploads).</p>
+            <h3>Card attributes</h3>
+            <p class="small" style="margin:0;">
+              Group: SEVENTEEN<br/>
+              Release: FML<br/>
+              Member: Mingyu<br/>
+              Type: POB<br/>
+              Store: Weverse<br/>
+              Round: 1
+            </p>
           </div>
+        </div>
+
+        <div class="chips">
+          <span class="chip">Report listing (demo)</span>
+          <span class="chip">Verify entry (demo)</span>
         </div>
       </div>
 
       <aside class="panel card">
         <h3 class="section-title">Quick actions</h3>
-        <a class="btn primary" style="width:100%" href="dashboard.html">Create a listing</a>
+        <a class="btn primary" style="width:100%" href="request.html">Request a variant</a>
         <div style="height:10px"></div>
         <a class="btn" style="width:100%" href="seller.html">Browse sellers</a>
         <p class="small" style="margin-top:12px">Tip: tap 🛒 to view your cart anytime.</p>
@@ -84,7 +100,7 @@
           <tr>
             <th>Seller</th>
             <th>Condition</th>
-            <th>Price</th>
+            <th>Item</th>
             <th>Shipping</th>
             <th></th>
           </tr>
@@ -95,8 +111,8 @@
             <td><a href="seller.html">MinCardShop</a></td>
             <td>NM</td>
             <td>$9.00</td>
-            <td>$1.50</td>
-            <td>
+            <td>Stamped/Tracked</td>
+            <td style="display:flex; gap:8px; flex-wrap:wrap;">
               <button
                 class="btn primary"
                 type="button"
@@ -105,9 +121,26 @@
                 data-item-title="SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)"
                 data-item-seller="MinCardShop"
                 data-item-price="9.00"
-                data-item-shipping="1.50"
+                data-shipping-options='[{"label":"Stamped","cost":1.50},{"label":"Tracked","cost":4.00}]'
+                data-shipping-label="Stamped"
+                data-shipping-cost="1.50"
               >
-                Add
+                Add (Stamped)
+              </button>
+
+              <button
+                class="btn"
+                type="button"
+                data-add-cart
+                data-card-id="svt-fml-weverse-pob-mingyu-r1"
+                data-item-title="SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)"
+                data-item-seller="MinCardShop"
+                data-item-price="9.00"
+                data-shipping-options='[{"label":"Stamped","cost":1.50},{"label":"Tracked","cost":4.00}]'
+                data-shipping-label="Tracked"
+                data-shipping-cost="4.00"
+              >
+                Add (Tracked)
               </button>
             </td>
           </tr>
@@ -116,8 +149,8 @@
             <td><a href="seller.html">KpopBay</a></td>
             <td>Mint</td>
             <td>$11.00</td>
-            <td>$2.00</td>
-            <td>
+            <td>Stamped/Tracked</td>
+            <td style="display:flex; gap:8px; flex-wrap:wrap;">
               <button
                 class="btn primary"
                 type="button"
@@ -126,9 +159,26 @@
                 data-item-title="SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)"
                 data-item-seller="KpopBay"
                 data-item-price="11.00"
-                data-item-shipping="2.00"
+                data-shipping-options='[{"label":"Stamped","cost":2.00},{"label":"Tracked","cost":4.50}]'
+                data-shipping-label="Stamped"
+                data-shipping-cost="2.00"
               >
-                Add
+                Add (Stamped)
+              </button>
+
+              <button
+                class="btn"
+                type="button"
+                data-add-cart
+                data-card-id="svt-fml-weverse-pob-mingyu-r1"
+                data-item-title="SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)"
+                data-item-seller="KpopBay"
+                data-item-price="11.00"
+                data-shipping-options='[{"label":"Stamped","cost":2.00},{"label":"Tracked","cost":4.50}]'
+                data-shipping-label="Tracked"
+                data-shipping-cost="4.50"
+              >
+                Add (Tracked)
               </button>
             </td>
           </tr>
@@ -136,7 +186,7 @@
       </table>
 
       <p class="small" style="margin-top:10px">
-        Demo cart only — checkout comes later (Stripe + Supabase).
+        Demo cart only — checkout is a simulated flow.
       </p>
     </section>
 
