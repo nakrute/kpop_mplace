@@ -22,12 +22,14 @@
       <nav class="navlinks">
         <a data-nav href="index.html">Home</a>
         <a data-nav href="browse.html">Browse</a>
+        <a data-nav href="saved.html">Saved</a>
         <a data-nav href="seller.html">Sellers</a>
         <a data-nav href="dashboard.html">Sell</a>
         <a data-nav href="about.html">About</a>
       </nav>
 
       <div class="nav-cta">
+        <a class="btn" href="saved.html">Saved</a>
         <a class="btn primary" href="dashboard.html">List a card</a>
       </div>
     </header>
@@ -41,7 +43,6 @@
           aria-label="Search"
         />
 
-        <!-- Values are normalized + stable keys -->
         <select id="groupFilter" aria-label="Group filter">
           <option value="">Any group</option>
           <option value="seventeen">SEVENTEEN</option>
@@ -57,6 +58,13 @@
           <option value="broadcast">Broadcast</option>
         </select>
 
+        <select id="sortFilter" aria-label="Sort">
+          <option value="">Sort by</option>
+          <option value="price-asc">Price: Low → High</option>
+          <option value="price-desc">Price: High → Low</option>
+          <option value="newest">Newest</option>
+        </select>
+
         <button id="clearFiltersBtn" class="btn" type="button">Clear</button>
       </div>
 
@@ -69,46 +77,63 @@
     </section>
 
     <section id="browseList" class="list">
-      <!-- IMPORTANT: data-group / data-type are the “keys” used for filtering -->
-      <a
+      <!-- ITEM 1 -->
+      <div
         class="panel rowitem"
-        href="item.html"
+        data-id="svt-fml-weverse-pob-mingyu-r1"
+        data-title="SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)"
+        data-href="item.html"
         data-group="seventeen"
         data-type="pob"
+        data-price="9"
+        data-date="2026-01-04"
         data-tags="seventeen svt fml weverse pob mingyu round 1 verified 18 listings us kr ph"
       >
-        <div class="left">
+        <a class="left" href="item.html">
           <div class="thumb"></div>
           <div>
             <div class="title">SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)</div>
             <div class="meta">Verified · 18 listings · Ships from US/KR/PH</div>
           </div>
-        </div>
-        <div style="text-align:right">
-          <div class="price">From $9.00</div>
-          <div class="pill">View</div>
-        </div>
-      </a>
+        </a>
 
-      <a
+        <div class="row-right">
+          <button class="heart" type="button" aria-label="Save item" data-save-btn>♡</button>
+          <div style="text-align:right">
+            <div class="price">From $9.00</div>
+            <div class="pill">View</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ITEM 2 -->
+      <div
         class="panel rowitem"
-        href="item.html"
+        data-id="skz-5star-album-pc-hyunjin-b"
+        data-title="Stray Kids · 5-STAR · Album PC · Hyunjin (Ver. B)"
+        data-href="item.html"
         data-group="stray kids"
         data-type="album pc"
+        data-price="6.5"
+        data-date="2026-01-10"
         data-tags="stray kids skz 5-star 5star album pc hyunjin ver b unverified 7 listings"
       >
-        <div class="left">
+        <a class="left" href="item.html">
           <div class="thumb"></div>
           <div>
             <div class="title">Stray Kids · 5-STAR · Album PC · Hyunjin (Ver. B)</div>
             <div class="meta">Unverified · 7 listings</div>
           </div>
+        </a>
+
+        <div class="row-right">
+          <button class="heart" type="button" aria-label="Save item" data-save-btn>♡</button>
+          <div style="text-align:right">
+            <div class="price">From $6.50</div>
+            <div class="pill">View</div>
+          </div>
         </div>
-        <div style="text-align:right">
-          <div class="price">From $6.50</div>
-          <div class="pill">View</div>
-        </div>
-      </a>
+      </div>
     </section>
 
     <footer class="footer">© <span id="y"></span> K-Card Market</footer>

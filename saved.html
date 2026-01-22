@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Saved · K-Card Market</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="panel nav">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          K-Card Market
+          <div class="small">Saved</div>
+        </div>
+      </div>
+
+      <button class="hamburger" onclick="toggleMenu()">Menu</button>
+
+      <nav class="navlinks">
+        <a data-nav href="index.html">Home</a>
+        <a data-nav href="browse.html">Browse</a>
+        <a data-nav href="saved.html">Saved</a>
+        <a data-nav href="seller.html">Sellers</a>
+        <a data-nav href="dashboard.html">Sell</a>
+        <a data-nav href="about.html">About</a>
+      </nav>
+
+      <div class="nav-cta">
+        <a class="btn" href="browse.html">Browse</a>
+      </div>
+    </header>
+
+    <section class="panel card" style="margin-top:18px">
+      <h2 style="margin:0 0 8px 0">Saved items</h2>
+      <p class="small" style="margin:0">Your wishlist is stored in this browser (localStorage).</p>
+    </section>
+
+    <section id="savedEmpty" class="panel card" style="margin-top:14px; display:none;">
+      <h3 style="margin:0 0 6px 0;">Nothing saved yet</h3>
+      <p class="small" style="margin:0;">Go to Browse and tap ♡ to save items you want.</p>
+    </section>
+
+    <section id="savedList" class="saved-grid"></section>
+
+    <footer class="footer">© <span id="y"></span> K-Card Market</footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+</body>
+</html>
