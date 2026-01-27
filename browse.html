@@ -13,12 +13,12 @@
         <div class="logo"></div>
         <div>
           K-Card Market
-          <div class="small" id="pageSubtitle">PAGE_SUBTITLE</div>
+          <div class="small" id="pageSubtitle">Browse</div>
         </div>
       </div>
-    
+
       <button class="hamburger" onclick="toggleMenu()">Menu</button>
-    
+
       <nav class="navlinks">
         <a data-nav href="index.html">Home</a>
         <a data-nav href="browse.html">Browse</a>
@@ -28,28 +28,43 @@
         <a data-nav href="dashboard.html">Sell</a>
         <a data-nav href="about.html">About</a>
       </nav>
-    
+
       <div class="nav-cta">
         <a class="btn" href="checkout.html">Checkout</a>
         <a class="btn primary" href="dashboard.html">List a card</a>
       </div>
     </header>
 
-    <section class="panel card" style="margin-top:18px">
-      <h2 style="margin:0 0 8px 0;">Browse</h2>
-      <p class="small" style="margin:0;">Find photocards, compare listings, and save what you want.</p>
-    </section>
-
-
     <section class="panel toolbar">
       <div class="filters">
-        <input id="searchInput" class="input" placeholder="Search: group, album, member, store POB…" aria-label="Search"/>
+        <input
+          id="searchInput"
+          class="input"
+          placeholder="Search: group, album, member, store POB…"
+          aria-label="Search"
+        />
 
         <select id="groupFilter" aria-label="Group filter">
           <option value="">Any group</option>
           <option value="seventeen">SEVENTEEN</option>
           <option value="stray kids">Stray Kids</option>
           <option value="twice">TWICE</option>
+        </select>
+
+        <!-- NEW: Era/Album -->
+        <select id="eraFilter" aria-label="Era/Album filter">
+          <option value="">Any era/album</option>
+          <option value="fml">FML</option>
+          <option value="5-star">5-STAR</option>
+          <!-- add more as you add catalog -->
+        </select>
+
+        <!-- NEW: Member -->
+        <select id="memberFilter" aria-label="Member filter">
+          <option value="">Any member</option>
+          <option value="mingyu">Mingyu</option>
+          <option value="hyunjin">Hyunjin</option>
+          <!-- add more as you add catalog -->
         </select>
 
         <select id="typeFilter" aria-label="Type filter">
@@ -87,13 +102,15 @@
     </section>
 
     <section id="browseList" class="list">
-      <!-- Row 1 -->
+      <!-- ITEM 1 -->
       <div
         class="panel rowitem"
         data-id="svt-fml-weverse-pob-mingyu-r1"
         data-title="SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)"
         data-href="item.html"
         data-group="seventeen"
+        data-era="fml"
+        data-member="mingyu"
         data-type="pob"
         data-price="9"
         data-date="2026-01-04"
@@ -117,13 +134,15 @@
         </div>
       </div>
 
-      <!-- Row 2 -->
+      <!-- ITEM 2 -->
       <div
         class="panel rowitem"
         data-id="skz-5star-album-pc-hyunjin-b"
         data-title="Stray Kids · 5-STAR · Album PC · Hyunjin (Ver. B)"
         data-href="item.html"
         data-group="stray kids"
+        data-era="5-star"
+        data-member="hyunjin"
         data-type="album pc"
         data-price="6.5"
         data-date="2026-01-10"

@@ -6,6 +6,46 @@ function toggleMenu() {
   if (nav) nav.classList.toggle("open");
 }
 
+const GROUP_MEMBERS = {
+  "seventeen": [
+    "Mingyu",
+    "S.Coups",
+    "Jeonghan",
+    "Joshua",
+    "Jun",
+    "Hoshi",
+    "Wonwoo",
+    "Woozi",
+    "DK",
+    "The8",
+    "Seungkwan",
+    "Vernon",
+    "Dino"
+  ],
+  "stray kids": [
+    "Bang Chan",
+    "Lee Know",
+    "Changbin",
+    "Hyunjin",
+    "Han",
+    "Felix",
+    "Seungmin",
+    "I.N"
+  ],
+  "twice": [
+    "Nayeon",
+    "Jeongyeon",
+    "Momo",
+    "Sana",
+    "Jihyo",
+    "Mina",
+    "Dahyun",
+    "Chaeyoung",
+    "Tzuyu"
+  ]
+};
+
+
 // Highlight active page in nav
 (function () {
   const path = location.pathname.split("/").pop() || "index.html";
@@ -282,6 +322,8 @@ function renderCart() {
 function applyBrowseFilters() {
   const searchEl = document.getElementById("searchInput");
   const groupEl = document.getElementById("groupFilter");
+  const eraEl = document.getElementById("eraFilter");       // NEW
+  const memberEl = document.getElementById("memberFilter"); // NEW
   const typeEl = document.getElementById("typeFilter");
   const sortEl = document.getElementById("sortFilter");
   const savedOnlyEl = document.getElementById("savedOnly");
@@ -294,6 +336,8 @@ function applyBrowseFilters() {
 
   const query = norm(searchEl.value);
   const group = norm(groupEl.value);
+  const era = norm(eraEl ? eraEl.value : "");           // NEW
+  const member = norm(memberEl ? memberEl.value : "");  // NEW
   const type = norm(typeEl.value);
   const sort = sortEl.value;
   const savedOnly = !!(savedOnlyEl && savedOnlyEl.checked);
@@ -303,11 +347,15 @@ function applyBrowseFilters() {
   const visible = [];
   for (const item of items) {
     const itemGroup = norm(item.dataset.group);
+    const itemEra = norm(item.dataset.era);         // NEW
+    const itemMember = norm(item.dataset.member);   // NEW
     const itemType = norm(item.dataset.type);
     const itemText = norm(item.dataset.tags || item.textContent);
     const id = item.dataset.id;
 
     const matchesGroup = !group || itemGroup.includes(group);
+    const matchesEra = !era || itemEra.includes(era);           // NEW
+    const matchesMember = !member || itemMember.includes(member); // NEW
     const matchesType = !type || itemType.includes(type);
 
     const qParts = query ? query.split(" ") : [];
@@ -315,12 +363,11 @@ function applyBrowseFilters() {
 
     const matchesSaved = !savedOnly || isSaved(id);
 
-    const show = matchesGroup && matchesType && matchesQuery && matchesSaved;
+    const show = matchesGroup && matchesEra && matchesMember && matchesType && matchesQuery && matchesSaved;
     item.style.display = show ? "" : "none";
     if (show) visible.push(item);
   }
 
-  // Sorting
   if (sort) {
     visible.sort((a, b) => {
       if (sort === "price-asc") return toNum(a.dataset.price) - toNum(b.dataset.price);
@@ -335,21 +382,22 @@ function applyBrowseFilters() {
   if (noResultsEl) noResultsEl.style.display = visible.length === 0 ? "" : "none";
 
   if (resultsCountEl) {
-    if (!query && !group && !type && !savedOnly) resultsCountEl.textContent = "Showing all results";
+    if (!query && !group && !era && !member && !type && !savedOnly) resultsCountEl.textContent = "Showing all results";
     else resultsCountEl.textContent = `Showing ${visible.length}`;
   }
 
-  // Chips (nice UX)
   if (chipsEl) {
     const chips = [];
     if (group) chips.push(`Group: ${groupEl.options[groupEl.selectedIndex].text}`);
+    if (eraEl && era) chips.push(`Era: ${eraEl.options[eraEl.selectedIndex].text}`);
+    if (memberEl && member) chips.push(`Member: ${memberEl.options[memberEl.selectedIndex].text}`);
     if (type) chips.push(`Type: ${typeEl.options[typeEl.selectedIndex].text}`);
     if (query) chips.push(`Search: "${searchEl.value.trim()}"`);
     if (savedOnly) chips.push("Saved only");
-
     chipsEl.innerHTML = chips.map(c => `<span class="chip">${c}</span>`).join("");
   }
 }
+
 
 /***********************
   Wishlist wiring
@@ -802,11 +850,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Browse page
   const searchEl = document.getElementById("searchInput");
-  const groupEl = document.getElementById("groupFilter");
   const typeEl = document.getElementById("typeFilter");
   const sortEl = document.getElementById("sortFilter");
   const clearBtn = document.getElementById("clearFiltersBtn");
   const savedOnlyEl = document.getElementById("savedOnly");
+  const eraEl = document.getElementById("eraFilter");
+  const groupEl = document.getElementById("groupFilter");
+  const memberEl = document.getElementById("memberFilter");
+  if (groupEl && memberEl) {
+    updateMemberDropdown();                // populate on load
+    groupEl.addEventListener("change", () => {
+      updateMemberDropdown();              // change members when group changes
+      applyBrowseFilters();                // re-filter results
+    });
+  }
+
+  if (eraEl) eraEl.addEventListener("change", applyBrowseFilters);
+  if (memberEl) memberEl.addEventListener("change", applyBrowseFilters);
+
 
   if (searchEl && groupEl && typeEl && sortEl) {
     searchEl.addEventListener("input", applyBrowseFilters);
@@ -821,6 +882,8 @@ document.addEventListener("DOMContentLoaded", () => {
         groupEl.value = "";
         typeEl.value = "";
         sortEl.value = "";
+        if (eraEl) eraEl.value = "";
+        if (memberEl) memberEl.value = "";
         if (savedOnlyEl) savedOnlyEl.checked = false;
         applyBrowseFilters();
       });
@@ -839,3 +902,37 @@ document.addEventListener("DOMContentLoaded", () => {
   initOrderSuccessPage();
   renderDashboard();
 });
+
+function updateMemberDropdown() {
+  const groupEl = document.getElementById("groupFilter");
+  const memberEl = document.getElementById("memberFilter");
+  if (!groupEl || !memberEl) return;
+
+  const selectedGroup = norm(groupEl.value);
+  const currentMember = memberEl.value;
+
+  // Reset
+  memberEl.innerHTML = `<option value="">Any member</option>`;
+
+  if (!selectedGroup || !GROUP_MEMBERS[selectedGroup]) {
+    // If no group selected, allow all members across groups
+    const all = new Set();
+    Object.values(GROUP_MEMBERS).forEach(arr => arr.forEach(m => all.add(m)));
+    [...all].sort().forEach(name => {
+      const opt = document.createElement("option");
+      opt.value = norm(name);
+      opt.textContent = name;
+      memberEl.appendChild(opt);
+    });
+  } else {
+    GROUP_MEMBERS[selectedGroup].forEach(name => {
+      const opt = document.createElement("option");
+      opt.value = norm(name);
+      opt.textContent = name;
+      memberEl.appendChild(opt);
+    });
+  }
+
+  // Try to preserve selected member if still valid
+  memberEl.value = currentMember;
+}
