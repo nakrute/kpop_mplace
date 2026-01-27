@@ -1,59 +1,12 @@
-/***********************
-  Helpers
-************************/
-function toggleMenu() {
-  const nav = document.querySelector(".nav");
-  if (nav) nav.classList.toggle("open");
-}
+// app.js (FULL) — Version B (structured pages)
+// Supabase + local wishlist/cart, for GitHub Pages
+// Pages should load with: <script type="module" src="app.js"></script>
 
-const GROUP_MEMBERS = {
-  "seventeen": [
-    "Mingyu",
-    "S.Coups",
-    "Jeonghan",
-    "Joshua",
-    "Jun",
-    "Hoshi",
-    "Wonwoo",
-    "Woozi",
-    "DK",
-    "The8",
-    "Seungkwan",
-    "Vernon",
-    "Dino"
-  ],
-  "stray kids": [
-    "Bang Chan",
-    "Lee Know",
-    "Changbin",
-    "Hyunjin",
-    "Han",
-    "Felix",
-    "Seungmin",
-    "I.N"
-  ],
-  "twice": [
-    "Nayeon",
-    "Jeongyeon",
-    "Momo",
-    "Sana",
-    "Jihyo",
-    "Mina",
-    "Dahyun",
-    "Chaeyoung",
-    "Tzuyu"
-  ]
-};
+import { supabase } from "./supabaseClient.js";
 
-
-// Highlight active page in nav
-(function () {
-  const path = location.pathname.split("/").pop() || "index.html";
-  document.querySelectorAll("[data-nav]").forEach((a) => {
-    if (a.getAttribute("href") === path) a.classList.add("active");
-  });
-})();
-
+/* =========================
+   Helpers
+========================= */
 function norm(str) {
   return (str || "").toLowerCase().replace(/\s+/g, " ").trim();
 }
@@ -62,25 +15,54 @@ function toNum(val) {
   return Number.isFinite(n) ? n : 0;
 }
 function toTime(val) {
-  const t = new Date(val).getTime();
+  const t = new Date(val || "").getTime();
   return Number.isFinite(t) ? t : 0;
 }
 function money(n) {
   const x = Number(n);
   return Number.isFinite(x) ? x.toFixed(2) : "0.00";
 }
-function safeJSON(str, fallback) {
-  try { return JSON.parse(str); } catch { return fallback; }
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+function getQueryParam(name) {
+  const u = new URL(location.href);
+  return u.searchParams.get(name);
 }
 
-/***********************
-  Wishlist (localStorage)
-************************/
+/* =========================
+   Nav: mobile + active link
+========================= */
+// HTML uses onclick="toggleMenu()"
+function toggleMenu() {
+  const nav = document.querySelector(".nav");
+  if (nav) nav.classList.toggle("open");
+}
+window.toggleMenu = toggleMenu;
+
+function markActiveNav() {
+  const path = location.pathname.split("/").pop() || "index.html";
+  document.querySelectorAll("[data-nav]").forEach((a) => {
+    if (a.getAttribute("href") === path) a.classList.add("active");
+  });
+}
+
+/* =========================
+   Wishlist (localStorage)
+========================= */
 const WISHLIST_KEY = "kcard_wishlist_v1";
 
 function getWishlist() {
-  try { return JSON.parse(localStorage.getItem(WISHLIST_KEY)) || {}; }
-  catch { return {}; }
+  try {
+    return JSON.parse(localStorage.getItem(WISHLIST_KEY)) || {};
+  } catch {
+    return {};
+  }
 }
 function setWishlist(obj) {
   localStorage.setItem(WISHLIST_KEY, JSON.stringify(obj));
@@ -100,14 +82,106 @@ function updateHeartButton(btn, saved) {
   btn.textContent = saved ? "♥" : "♡";
 }
 
-/***********************
-  Cart (localStorage) + Drawer UI
-************************/
-const CART_KEY = "kcard_cart_v2";
+function initRowSaveButtons() {
+  document.querySelectorAll("[data-save-btn]").forEach((btn) => {
+    const row = btn.closest(".rowitem");
+    if (!row) return;
+    const id = row.dataset.id;
+    const title = row.dataset.title || row.querySelector(".title")?.textContent || "Saved item";
+    const href = row.querySelector("a.left")?.getAttribute("href") || row.dataset.href || "browse.html";
+    const img = row.dataset.img || "";
+
+    updateHeartButton(btn, isSaved(id));
+
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleSaved({ id, title, href, img, group: row.dataset.group || "", type: row.dataset.type || "" });
+      updateHeartButton(btn, isSaved(id));
+      // If we're sorting saved-first or filtering saved-only, reapply
+      if (document.getElementById("sortFilter") || document.getElementById("savedOnly")) {
+        applyBrowseFilters();
+      }
+    });
+  });
+}
+
+function initItemWishlistButtonFromHeader(card) {
+  const btn = document.getElementById("itemSaveBtn");
+  if (!btn || !card?.id) return;
+
+  const item = {
+    id: card.id,
+    title: card.title || card.id,
+    href: `item.html?id=${encodeURIComponent(card.id)}`,
+    img: card.image_url || ""
+  };
+
+  updateHeartButton(btn, isSaved(item.id));
+
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    toggleSaved(item);
+    updateHeartButton(btn, isSaved(item.id));
+  });
+}
+
+function renderSavedPage() {
+  const listEl = document.getElementById("savedList");
+  const emptyEl = document.getElementById("savedEmpty");
+  if (!listEl || !emptyEl) return;
+
+  const wl = getWishlist();
+  const items = Object.values(wl);
+
+  listEl.innerHTML = "";
+
+  if (items.length === 0) {
+    emptyEl.style.display = "";
+    return;
+  }
+  emptyEl.style.display = "none";
+
+  for (const it of items) {
+    const row = document.createElement("div");
+    row.className = "panel rowitem";
+    row.innerHTML = `
+      <a class="left" href="${escapeHtml(it.href || "browse.html")}">
+        ${it.img ? `<img class="thumbimg" src="${escapeHtml(it.img)}" alt="thumb" />` : `<div class="thumb"></div>`}
+        <div>
+          <div class="title">${escapeHtml(it.title || "Saved item")}</div>
+          <div class="meta">${escapeHtml([it.group, it.type].filter(Boolean).join(" · "))}</div>
+        </div>
+      </a>
+      <div class="row-right">
+        <button class="heart saved" type="button" aria-label="Remove from saved">♥</button>
+        <a class="btn primary" href="${escapeHtml(it.href || "browse.html")}">View</a>
+      </div>
+    `;
+
+    row.querySelector(".heart").addEventListener("click", (e) => {
+      e.preventDefault();
+      const wl2 = getWishlist();
+      delete wl2[it.id];
+      setWishlist(wl2);
+      renderSavedPage();
+    });
+
+    listEl.appendChild(row);
+  }
+}
+
+/* =========================
+   Cart (localStorage) + Drawer
+========================= */
+const CART_KEY = "kcard_cart_v3";
 
 function getCart() {
-  try { return JSON.parse(localStorage.getItem(CART_KEY)) || { items: [] }; }
-  catch { return { items: [] }; }
+  try {
+    return JSON.parse(localStorage.getItem(CART_KEY)) || { items: [] };
+  } catch {
+    return { items: [] };
+  }
 }
 function setCart(cart) {
   localStorage.setItem(CART_KEY, JSON.stringify(cart));
@@ -151,8 +225,8 @@ function ensureCartUI() {
         <div class="small">Subtotal</div>
         <div style="font-weight:900;" id="cartSubtotal">$0.00</div>
       </div>
-      <a class="btn primary" href="checkout.html" id="cartCheckoutLink">Checkout (demo)</a>
-      <div class="small">Demo cart only — no payment yet.</div>
+      <a class="btn primary" href="checkout.html">Checkout (demo)</a>
+      <div class="small">Demo cart only — payments later.</div>
     </div>
   `;
 
@@ -188,16 +262,15 @@ function closeCart() {
   const drawer = document.getElementById("cartDrawer");
   if (!overlay || !drawer) return;
   drawer.classList.remove("open");
-  setTimeout(() => { overlay.style.display = "none"; }, 220);
+  setTimeout(() => (overlay.style.display = "none"), 220);
 }
-
 function updateCartCountUI() {
   ensureCartUI();
   const cart = getCart();
   const c = cartCount(cart);
   const dot = document.getElementById("cartCountDot");
-  if (dot) dot.textContent = String(c);
   const badge = document.getElementById("cartBadge");
+  if (dot) dot.textContent = String(c);
   if (badge) badge.textContent = `${c} item${c === 1 ? "" : "s"}`;
 }
 
@@ -205,9 +278,7 @@ function addToCart(line) {
   const cart = getCart();
   cart.items = cart.items || [];
 
-  const key = line.key;
-  const existing = cart.items.find((x) => x.key === key);
-
+  const existing = cart.items.find((x) => x.key === line.key);
   if (existing) existing.qty += 1;
   else cart.items.push({ ...line, qty: 1 });
 
@@ -219,7 +290,7 @@ function addToCart(line) {
 function changeQty(key, delta) {
   const cart = getCart();
   cart.items = (cart.items || [])
-    .map((it) => it.key !== key ? it : ({ ...it, qty: Math.max(0, (it.qty || 0) + delta) }))
+    .map((it) => (it.key !== key ? it : { ...it, qty: Math.max(0, (it.qty || 0) + delta) }))
     .filter((it) => (it.qty || 0) > 0);
 
   setCart(cart);
@@ -239,7 +310,7 @@ function updateShipping(key, nextLabel) {
   const cart = getCart();
   cart.items = (cart.items || []).map((it) => {
     if (it.key !== key) return it;
-    const opt = (it.shippingOptions || []).find(o => o.label === nextLabel);
+    const opt = (it.shippingOptions || []).find((o) => o.label === nextLabel);
     if (!opt) return it;
     return { ...it, shippingLabel: opt.label, shippingCost: Number(opt.cost) || 0 };
   });
@@ -271,12 +342,12 @@ function renderCart() {
     row.innerHTML = `
       <div class="thumb"></div>
       <div class="ci-main">
-        <div class="ci-title">${it.title}</div>
+        <div class="ci-title">${escapeHtml(it.title)}</div>
         <div class="ci-meta">
-          ${it.seller ? `Seller: ${it.seller}` : ""}
+          ${it.seller ? `Seller: ${escapeHtml(it.seller)}` : ""}
           ${it.seller ? " · " : ""}
           Item $${money(it.price)}
-          · Ship <span style="font-weight:800;">${it.shippingLabel || "Shipping"}</span> ($${money(it.shippingCost)})
+          · Ship <span style="font-weight:800;">${escapeHtml(it.shippingLabel || "Shipping")}</span> ($${money(it.shippingCost)})
         </div>
 
         <div class="qty">
@@ -285,9 +356,11 @@ function renderCart() {
           <button type="button" aria-label="Increase">+</button>
 
           ${
-            (it.shippingOptions && it.shippingOptions.length > 0)
+            it.shippingOptions && it.shippingOptions.length
               ? `<select class="input" style="max-width:220px; margin-left:auto;" data-ship-select>
-                   ${(it.shippingOptions || []).map(o => `<option value="${o.label}">${o.label} ($${money(o.cost)})</option>`).join("")}
+                   ${it.shippingOptions
+                     .map((o) => `<option value="${escapeHtml(o.label)}">${escapeHtml(o.label)} ($${money(o.cost)})</option>`)
+                     .join("")}
                  </select>`
               : `<span style="margin-left:auto;"></span>`
           }
@@ -301,8 +374,7 @@ function renderCart() {
     decBtn.addEventListener("click", () => changeQty(it.key, -1));
     incBtn.addEventListener("click", () => changeQty(it.key, +1));
 
-    const removeBtn = row.querySelector("[data-remove]");
-    removeBtn.addEventListener("click", () => removeLine(it.key));
+    row.querySelector("[data-remove]").addEventListener("click", () => removeLine(it.key));
 
     const shipSelect = row.querySelector("[data-ship-select]");
     if (shipSelect) {
@@ -316,14 +388,84 @@ function renderCart() {
   subtotalEl.textContent = `$${money(cartSubtotal(cart))}`;
 }
 
-/***********************
-  Browse: filtering + sorting
-************************/
+/* =========================
+   Auth CTA (Version B uses #authCta)
+========================= */
+async function renderAuthCta() {
+  const cta = document.getElementById("authCta");
+  if (!cta) return;
+
+  // Preserve existing buttons (Checkout/List a card) and prepend auth control
+  const existing = cta.innerHTML;
+
+  const { data } = await supabase.auth.getSession();
+  const session = data.session;
+
+  if (session?.user) {
+    cta.innerHTML = `
+      <button class="btn" type="button" id="logoutBtn">Logout</button>
+      ${existing}
+    `;
+    cta.querySelector("#logoutBtn").addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      await renderAuthCta();
+      // Re-run gated pages if you’re currently on them
+      await initDashboardFromSupabase();
+      await initRequestsFromSupabase();
+    });
+  } else {
+    cta.innerHTML = `
+      <a class="btn" href="login.html">Login</a>
+      ${existing}
+    `;
+  }
+}
+
+/* =========================
+   Browse: filters + auto-member dropdown
+========================= */
+const GROUP_MEMBERS = {
+  "seventeen": ["Mingyu","S.Coups","Jeonghan","Joshua","Jun","Hoshi","Wonwoo","Woozi","DK","The8","Seungkwan","Vernon","Dino"],
+  "stray kids": ["Bang Chan","Lee Know","Changbin","Hyunjin","Han","Felix","Seungmin","I.N"],
+  "twice": ["Nayeon","Jeongyeon","Momo","Sana","Jihyo","Mina","Dahyun","Chaeyoung","Tzuyu"]
+};
+
+function updateMemberDropdown() {
+  const groupEl = document.getElementById("groupFilter");
+  const memberEl = document.getElementById("memberFilter");
+  if (!groupEl || !memberEl) return;
+
+  const selectedGroup = norm(groupEl.value);
+  const current = memberEl.value;
+
+  memberEl.innerHTML = `<option value="">Any member</option>`;
+
+  if (!selectedGroup || !GROUP_MEMBERS[selectedGroup]) {
+    const all = new Set();
+    Object.values(GROUP_MEMBERS).forEach((arr) => arr.forEach((m) => all.add(m)));
+    [...all].sort().forEach((name) => {
+      const opt = document.createElement("option");
+      opt.value = norm(name);
+      opt.textContent = name;
+      memberEl.appendChild(opt);
+    });
+  } else {
+    GROUP_MEMBERS[selectedGroup].forEach((name) => {
+      const opt = document.createElement("option");
+      opt.value = norm(name);
+      opt.textContent = name;
+      memberEl.appendChild(opt);
+    });
+  }
+
+  memberEl.value = current;
+}
+
 function applyBrowseFilters() {
   const searchEl = document.getElementById("searchInput");
   const groupEl = document.getElementById("groupFilter");
-  const eraEl = document.getElementById("eraFilter");       // NEW
-  const memberEl = document.getElementById("memberFilter"); // NEW
+  const eraEl = document.getElementById("eraFilter");
+  const memberEl = document.getElementById("memberFilter");
   const typeEl = document.getElementById("typeFilter");
   const sortEl = document.getElementById("sortFilter");
   const savedOnlyEl = document.getElementById("savedOnly");
@@ -336,8 +478,8 @@ function applyBrowseFilters() {
 
   const query = norm(searchEl.value);
   const group = norm(groupEl.value);
-  const era = norm(eraEl ? eraEl.value : "");           // NEW
-  const member = norm(memberEl ? memberEl.value : "");  // NEW
+  const era = norm(eraEl ? eraEl.value : "");
+  const member = norm(memberEl ? memberEl.value : "");
   const type = norm(typeEl.value);
   const sort = sortEl.value;
   const savedOnly = !!(savedOnlyEl && savedOnlyEl.checked);
@@ -347,15 +489,15 @@ function applyBrowseFilters() {
   const visible = [];
   for (const item of items) {
     const itemGroup = norm(item.dataset.group);
-    const itemEra = norm(item.dataset.era);         // NEW
-    const itemMember = norm(item.dataset.member);   // NEW
+    const itemEra = norm(item.dataset.era);
+    const itemMember = norm(item.dataset.member);
     const itemType = norm(item.dataset.type);
     const itemText = norm(item.dataset.tags || item.textContent);
     const id = item.dataset.id;
 
     const matchesGroup = !group || itemGroup.includes(group);
-    const matchesEra = !era || itemEra.includes(era);           // NEW
-    const matchesMember = !member || itemMember.includes(member); // NEW
+    const matchesEra = !era || itemEra.includes(era);
+    const matchesMember = !member || itemMember.includes(member);
     const matchesType = !type || itemType.includes(type);
 
     const qParts = query ? query.split(" ") : [];
@@ -394,131 +536,218 @@ function applyBrowseFilters() {
     if (type) chips.push(`Type: ${typeEl.options[typeEl.selectedIndex].text}`);
     if (query) chips.push(`Search: "${searchEl.value.trim()}"`);
     if (savedOnly) chips.push("Saved only");
-    chipsEl.innerHTML = chips.map(c => `<span class="chip">${c}</span>`).join("");
+    chipsEl.innerHTML = chips.map((c) => `<span class="chip">${escapeHtml(c)}</span>`).join("");
   }
 }
 
+function initBrowseFilters() {
+  const searchEl = document.getElementById("searchInput");
+  const groupEl = document.getElementById("groupFilter");
+  const eraEl = document.getElementById("eraFilter");
+  const memberEl = document.getElementById("memberFilter");
+  const typeEl = document.getElementById("typeFilter");
+  const sortEl = document.getElementById("sortFilter");
+  const clearBtn = document.getElementById("clearFiltersBtn");
+  const savedOnlyEl = document.getElementById("savedOnly");
 
-/***********************
-  Wishlist wiring
-************************/
-function initBrowseWishlistButtons() {
-  const listEl = document.getElementById("browseList");
-  if (!listEl) return;
+  if (!(searchEl && groupEl && typeEl && sortEl)) return;
 
-  // initial hearts + thumbs
-  listEl.querySelectorAll(".rowitem[data-id]").forEach((row) => {
-    const id = row.dataset.id;
-    updateHeartButton(row.querySelector("[data-save-btn]"), isSaved(id));
+  if (memberEl) {
+    updateMemberDropdown();
+    groupEl.addEventListener("change", () => {
+      updateMemberDropdown();
+      applyBrowseFilters();
+    });
+    memberEl.addEventListener("change", applyBrowseFilters);
+  } else {
+    groupEl.addEventListener("change", applyBrowseFilters);
+  }
 
-    const img = row.querySelector("img.thumbimg");
-    if (img && row.dataset.img) img.src = row.dataset.img;
-  });
+  searchEl.addEventListener("input", applyBrowseFilters);
+  if (eraEl) eraEl.addEventListener("change", applyBrowseFilters);
+  typeEl.addEventListener("change", applyBrowseFilters);
+  sortEl.addEventListener("change", applyBrowseFilters);
+  if (savedOnlyEl) savedOnlyEl.addEventListener("change", applyBrowseFilters);
 
-  // event delegation
-  listEl.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-save-btn]");
-    if (!btn) return;
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      searchEl.value = "";
+      groupEl.value = "";
+      if (eraEl) eraEl.value = "";
+      if (memberEl) memberEl.value = "";
+      typeEl.value = "";
+      sortEl.value = "";
+      if (savedOnlyEl) savedOnlyEl.checked = false;
+      if (memberEl) updateMemberDropdown();
+      applyBrowseFilters();
+    });
+  }
 
-    e.preventDefault();
-    e.stopPropagation();
-
-    const row = btn.closest(".rowitem");
-    if (!row) return;
-
-    const item = {
-      id: row.dataset.id,
-      title: row.dataset.title || row.querySelector(".title")?.textContent?.trim() || "Saved item",
-      href: row.dataset.href || row.querySelector("a")?.getAttribute("href") || "item.html",
-      group: row.dataset.group || "",
-      type: row.dataset.type || "",
-      price: row.dataset.price || "",
-      date: row.dataset.date || "",
-      img: row.dataset.img || ""
-    };
-
-    toggleSaved(item);
-    updateHeartButton(btn, isSaved(item.id));
-
-    // if "saved only" is on, reapply filters so items disappear/appear correctly
-    const savedOnlyEl = document.getElementById("savedOnly");
-    if (savedOnlyEl && savedOnlyEl.checked) applyBrowseFilters();
-  });
+  applyBrowseFilters();
 }
 
-function initItemWishlistButton() {
-  const meta = document.getElementById("itemMeta");
-  const btn = document.getElementById("itemSaveBtn");
-  if (!meta || !btn) return;
-
-  const item = {
-    id: meta.dataset.id,
-    title: meta.dataset.title,
-    href: meta.dataset.href || "item.html",
-    img: meta.dataset.img || ""
-  };
-
-  updateHeartButton(btn, isSaved(item.id));
-
-  btn.addEventListener("click", (e) => {
-    e.preventDefault();
-    toggleSaved(item);
-    updateHeartButton(btn, isSaved(item.id));
-  });
+/* =========================
+   Supabase: Item page (Version B placeholders)
+========================= */
+function sellerLabelFromUuid(uuid) {
+  if (!uuid) return "Seller";
+  const s = String(uuid);
+  return `Seller ${s.slice(0, 6)}`;
 }
 
-function renderSavedPage() {
-  const listEl = document.getElementById("savedList");
-  const emptyEl = document.getElementById("savedEmpty");
-  if (!listEl || !emptyEl) return;
+async function initItemFromSupabase() {
+  const headerLoading = document.getElementById("itemHeaderLoading");
+  const headerWrap = document.getElementById("itemHeader");
+  const listingsLoading = document.getElementById("listingsLoading");
+  const listingsTable = document.getElementById("listingsTable");
+  const listingsBody = document.getElementById("listingsBody");
+  const listingsEmpty = document.getElementById("listingsEmpty");
 
-  const wl = getWishlist();
-  const items = Object.values(wl);
+  // If not on item.html, bail
+  if (!headerLoading || !headerWrap || !listingsLoading || !listingsTable || !listingsBody || !listingsEmpty) return;
 
-  listEl.innerHTML = "";
-
-  if (items.length === 0) {
-    emptyEl.style.display = "";
+  const cardId = getQueryParam("id");
+  if (!cardId) {
+    headerLoading.textContent = "Missing card id. Go back to Browse and click an item.";
+    listingsLoading.style.display = "none";
     return;
   }
-  emptyEl.style.display = "none";
 
-  items.sort((a, b) => toTime(b.date) - toTime(a.date));
+  const { data: card, error: cardErr } = await supabase
+    .from("cards")
+    .select("*")
+    .eq("id", cardId)
+    .single();
 
-  for (const it of items) {
-    const card = document.createElement("div");
-    card.className = "panel rowitem";
-    card.setAttribute("data-id", it.id);
-
-    card.innerHTML = `
-      <div class="left">
-        ${it.img ? `<img class="thumbimg" src="${it.img}" alt="thumb" />` : `<div class="thumb"></div>`}
-        <div>
-          <div class="title">${it.title || "Saved item"}</div>
-          <div class="meta">${[it.group, it.type].filter(Boolean).join(" · ")}</div>
-        </div>
-      </div>
-      <div class="row-right">
-        <button class="heart saved" type="button" aria-label="Remove from saved">♥</button>
-        <a class="btn primary" href="${it.href || "item.html"}">View</a>
-      </div>
-    `;
-
-    const heart = card.querySelector(".heart");
-    heart.addEventListener("click", () => {
-      const wl2 = getWishlist();
-      delete wl2[it.id];
-      setWishlist(wl2);
-      renderSavedPage();
-    });
-
-    listEl.appendChild(card);
+  if (cardErr || !card) {
+    headerLoading.textContent = "Card not found in catalog.";
+    listingsLoading.style.display = "none";
+    return;
   }
+
+  // Render header
+  const titleEl = document.getElementById("itemTitle");
+  const badgeEl = document.getElementById("itemBadge");
+  const metaEl = document.getElementById("itemMetaLine");
+  const imgEl = document.getElementById("itemImage");
+  const attrsEl = document.getElementById("itemAttrs");
+  const statsEl = document.getElementById("itemStats");
+
+  if (titleEl) titleEl.textContent = card.title || card.id;
+  if (badgeEl) badgeEl.textContent = card.is_verified ? "Verified catalog entry" : "Catalog";
+  if (metaEl) {
+    metaEl.textContent =
+      `${card.group_name || "—"}${card.era ? " · " + card.era : ""}${card.member ? " · " + card.member : ""}${card.card_type ? " · " + card.card_type : ""}`;
+  }
+  if (imgEl) imgEl.src = card.image_url || "https://placehold.co/256x256/png?text=Card";
+  if (attrsEl) {
+    attrsEl.innerHTML = `
+      Group: ${escapeHtml(card.group_name || "—")}<br/>
+      Release: ${escapeHtml(card.era || "—")}<br/>
+      Member: ${escapeHtml(card.member || "—")}<br/>
+      Type: ${escapeHtml(card.card_type || "—")}
+    `;
+  }
+
+  headerLoading.style.display = "none";
+  headerWrap.style.display = "";
+
+  initItemWishlistButtonFromHeader(card);
+
+  // Listings
+  const { data: rows, error: listErr } = await supabase
+    .from("listings")
+    .select("*")
+    .eq("card_id", cardId)
+    .eq("status", "active")
+    .order("price", { ascending: true });
+
+  listingsLoading.style.display = "none";
+
+  if (listErr) {
+    listingsEmpty.style.display = "";
+    listingsEmpty.textContent = "Could not load listings.";
+    return;
+  }
+
+  if (!rows || rows.length === 0) {
+    listingsEmpty.style.display = "";
+    return;
+  }
+
+  // Stats
+  const totals = rows
+    .map((r) => {
+      const p = Number(r.price) || 0;
+      const stamped = Number(r.shipping_stamped) || 0;
+      const tracked = Number(r.shipping_tracked) || 0;
+      const bestShip = Math.min(stamped || Infinity, tracked || Infinity);
+      const ship = Number.isFinite(bestShip) ? bestShip : 0;
+      return p + ship;
+    })
+    .sort((a, b) => a - b);
+
+  const min = totals[0];
+  const max = totals[totals.length - 1];
+  const mid =
+    totals.length % 2
+      ? totals[(totals.length - 1) / 2]
+      : (totals[totals.length / 2 - 1] + totals[totals.length / 2]) / 2;
+
+  if (statsEl) statsEl.textContent = `From $${money(min)} · Median $${money(mid)} · High $${money(max)} (${rows.length} listings)`;
+
+  // Table
+  listingsBody.innerHTML = "";
+
+  for (const r of rows) {
+    const seller = sellerLabelFromUuid(r.seller_id);
+
+    const options = [];
+    if (Number(r.shipping_stamped) >= 0) options.push({ label: "Stamped", cost: Number(r.shipping_stamped) || 0 });
+    if (Number(r.shipping_tracked) >= 0) options.push({ label: "Tracked", cost: Number(r.shipping_tracked) || 0 });
+
+    const defaultOpt = options.find((o) => o.label === "Stamped") || options[0] || { label: "Shipping", cost: 0 };
+    const keyBase = `${card.id}__${r.id}`;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(seller)}</td>
+      <td>${escapeHtml(r.condition)}</td>
+      <td>$${money(r.price)}</td>
+      <td>${options.map((o) => `${escapeHtml(o.label)} $${money(o.cost)}`).join(" / ")}</td>
+      <td style="display:flex; gap:8px; flex-wrap:wrap;">
+        ${options
+          .map(
+            (o) => `
+            <button
+              class="${o.label === defaultOpt.label ? "btn primary" : "btn"}"
+              type="button"
+              data-add-cart
+              data-card-id="${escapeHtml(card.id)}"
+              data-item-title="${escapeHtml(card.title || card.id)}"
+              data-item-seller="${escapeHtml(seller)}"
+              data-item-price="${escapeHtml(String(r.price))}"
+              data-shipping-options='${escapeHtml(JSON.stringify(options))}'
+              data-shipping-label="${escapeHtml(o.label)}"
+              data-shipping-cost="${escapeHtml(String(o.cost))}"
+              data-line-key="${escapeHtml(keyBase + "__" + o.label)}"
+            >
+              Add (${escapeHtml(o.label)})
+            </button>
+          `
+          )
+          .join("")}
+      </td>
+    `;
+    listingsBody.appendChild(tr);
+  }
+
+  listingsTable.style.display = "";
 }
 
-/***********************
-  Add-to-cart wiring
-************************/
+/* =========================
+   Add-to-cart wiring (works on Item listings buttons)
+========================= */
 function initAddToCartButtons() {
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-add-cart]");
@@ -530,409 +759,220 @@ function initAddToCartButtons() {
     const seller = btn.dataset.itemSeller || "";
     const price = Number(btn.dataset.itemPrice) || 0;
 
-    const cardId = btn.dataset.cardId || "card";
-    const sellerKey = seller ? norm(seller).replace(/\s+/g, "-") : "seller";
+    let options = [];
+    try {
+      options = JSON.parse(btn.dataset.shippingOptions || "[]");
+    } catch {
+      options = [];
+    }
 
-    const options = safeJSON(btn.dataset.shippingOptions || "[]", []);
-    const defaultLabel = btn.dataset.shippingLabel || (options[0]?.label) || "Shipping";
-    const defaultCost = Number(btn.dataset.shippingCost || options[0]?.cost || 0) || 0;
+    const shippingLabel = btn.dataset.shippingLabel || options[0]?.label || "Shipping";
+    const shippingCost = Number(btn.dataset.shippingCost || options[0]?.cost || 0) || 0;
 
-    const key = `${cardId}__${sellerKey}__${price}__${defaultLabel}__${defaultCost}`;
+    const key =
+      btn.dataset.lineKey ||
+      `${btn.dataset.cardId || "card"}__${norm(seller)}__${price}__${shippingLabel}__${shippingCost}`;
 
     addToCart({
       key,
-      cardId,
+      cardId: btn.dataset.cardId || "",
       title,
       seller,
       price,
-      shippingLabel: defaultLabel,
-      shippingCost: defaultCost,
+      shippingLabel,
+      shippingCost,
       shippingOptions: options
     });
   });
 }
 
-/***********************
-  Demo Checkout + Orders
-************************/
-const CHECKOUT_INFO_KEY = "kcard_checkout_info_v1";
-const ORDERS_KEY = "kcard_orders_v1";
-
-function getOrders() {
-  try { return JSON.parse(localStorage.getItem(ORDERS_KEY)) || []; }
-  catch { return []; }
-}
-function setOrders(arr) {
-  localStorage.setItem(ORDERS_KEY, JSON.stringify(arr));
-}
-
-function initCheckoutPage() {
-  const form = document.getElementById("checkoutForm");
-  const summary = document.getElementById("checkoutSummary");
-  if (!form || !summary) return;
-
-  const cart = getCart();
-  const items = cart.items || [];
-
-  if (items.length === 0) {
-    summary.innerHTML = `<div class="cart-empty">Your cart is empty. Go add a listing first.</div>`;
-    return;
-  }
-
-  const savedInfo = safeJSON(localStorage.getItem(CHECKOUT_INFO_KEY) || "{}", {});
-  ["name","email","address1","address2","city","state","zip","country"].forEach(k=>{
-    const el = document.getElementById(k);
-    if (el && savedInfo[k]) el.value = savedInfo[k];
-  });
-
-  summary.innerHTML = `
-    <div class="card">
-      <h3 style="margin:0 0 8px 0;">Order summary</h3>
-      ${items.map(it => `
-        <div class="cart-row" style="margin:8px 0;">
-          <div class="small" style="max-width:280px;">
-            ${it.title}<br/>
-            <span class="small">Seller: ${it.seller} · ${it.shippingLabel}</span>
-          </div>
-          <div style="font-weight:900;">$${money((Number(it.price)+Number(it.shippingCost))*(it.qty||1))}</div>
-        </div>
-      `).join("")}
-      <div class="cart-row" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border);">
-        <div class="small">Subtotal</div>
-        <div style="font-weight:900;">$${money(cartSubtotal(cart))}</div>
-      </div>
-      <div class="small">Demo only — no payment.</div>
-    </div>
-  `;
-
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-
-    const info = {
-      name: document.getElementById("name").value.trim(),
-      email: document.getElementById("email").value.trim(),
-      address1: document.getElementById("address1").value.trim(),
-      address2: document.getElementById("address2").value.trim(),
-      city: document.getElementById("city").value.trim(),
-      state: document.getElementById("state").value.trim(),
-      zip: document.getElementById("zip").value.trim(),
-      country: document.getElementById("country").value.trim(),
-    };
-
-    localStorage.setItem(CHECKOUT_INFO_KEY, JSON.stringify(info));
-
-    const orderId = "KC-" + Math.random().toString(16).slice(2, 8).toUpperCase();
-    const order = {
-      id: orderId,
-      createdAt: new Date().toISOString(),
-      info,
-      items,
-      subtotal: cartSubtotal(cart),
-      status: "Placed (demo)"
-    };
-
-    const orders = getOrders();
-    orders.unshift(order);
-    setOrders(orders);
-
-    setCart({ items: [] });
-    updateCartCountUI();
-
-    localStorage.setItem("kcard_last_order_id", orderId);
-    location.href = "order-success.html";
-  });
-}
-
-function initOrderSuccessPage() {
-  const el = document.getElementById("orderSuccess");
-  if (!el) return;
-
-  const last = localStorage.getItem("kcard_last_order_id");
-  if (!last) {
-    el.innerHTML = `<div class="cart-empty">No recent order found.</div>`;
-    return;
-  }
-  const orders = getOrders();
-  const order = orders.find(o => o.id === last);
-  if (!order) {
-    el.innerHTML = `<div class="cart-empty">Order not found.</div>`;
-    return;
-  }
-
-  el.innerHTML = `
-    <div class="badge">Demo order placed</div>
-    <h2 style="margin:10px 0 8px 0;">Order ${order.id}</h2>
-    <p class="small" style="margin:0 0 12px 0;">Status: ${order.status}</p>
-    <div class="card">
-      <h3 style="margin:0 0 8px 0;">Items</h3>
-      ${order.items.map(it => `
-        <div class="cart-row" style="margin:8px 0;">
-          <div class="small">${it.title}<br/><span class="small">Seller: ${it.seller} · ${it.shippingLabel}</span></div>
-          <div style="font-weight:900;">$${money((Number(it.price)+Number(it.shippingCost))*(it.qty||1))}</div>
-        </div>
-      `).join("")}
-      <div class="cart-row" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border);">
-        <div class="small">Subtotal</div>
-        <div style="font-weight:900;">$${money(order.subtotal)}</div>
-      </div>
-    </div>
-    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
-      <a class="btn" href="browse.html">Continue browsing</a>
-      <a class="btn primary" href="dashboard.html">Go to dashboard</a>
-    </div>
-  `;
-}
-
-/***********************
-  Catalog request form
-************************/
-const REQUESTS_KEY = "kcard_requests_v1";
-
-function initRequestPage() {
-  const form = document.getElementById("requestForm");
-  const msg = document.getElementById("requestMsg");
-  if (!form || !msg) return;
-
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-
-    const payload = {
-      createdAt: new Date().toISOString(),
-      group: document.getElementById("rq_group").value.trim(),
-      album: document.getElementById("rq_album").value.trim(),
-      member: document.getElementById("rq_member").value.trim(),
-      type: document.getElementById("rq_type").value.trim(),
-      store: document.getElementById("rq_store").value.trim(),
-      round: document.getElementById("rq_round").value.trim(),
-      notes: document.getElementById("rq_notes").value.trim(),
-    };
-
-    const arr = safeJSON(localStorage.getItem(REQUESTS_KEY) || "[]", []);
-    arr.unshift(payload);
-    localStorage.setItem(REQUESTS_KEY, JSON.stringify(arr));
-
-    form.reset();
-    msg.textContent = "Request submitted (stored locally for now).";
-  });
-}
-
-/***********************
-  Demo Seller listings CRUD
-************************/
-const LISTINGS_KEY = "kcard_my_listings_v1";
-
-function getMyListings() {
-  return safeJSON(localStorage.getItem(LISTINGS_KEY) || "[]", []);
-}
-function setMyListings(arr) {
-  localStorage.setItem(LISTINGS_KEY, JSON.stringify(arr));
-}
-
-function renderDashboard() {
-  const wrap = document.getElementById("myListings");
-  const ordersWrap = document.getElementById("myOrders");
+/* =========================
+   Supabase: Dashboard (seller listings)
+========================= */
+async function initDashboardFromSupabase() {
+  const needs = document.getElementById("dashNeedsAuth");
+  const authed = document.getElementById("dashAuthed");
   const form = document.getElementById("listingForm");
-  if (!wrap || !form) return;
+  const msg = document.getElementById("listingMsg");
+  const listWrap = document.getElementById("myListings");
 
-  function drawListings() {
-    const listings = getMyListings();
-    wrap.innerHTML = "";
+  if (!needs || !authed || !form || !listWrap) return;
 
-    if (listings.length === 0) {
-      wrap.innerHTML = `<div class="cart-empty">No listings yet. Create one above.</div>`;
+  const { data } = await supabase.auth.getSession();
+  const user = data.session?.user;
+
+  if (!user) {
+    needs.style.display = "";
+    authed.style.display = "none";
+    return;
+  }
+
+  needs.style.display = "none";
+  authed.style.display = "";
+
+  async function loadMyListings() {
+    listWrap.innerHTML = `<div class="small">Loading your listings…</div>`;
+
+    const { data: rows, error } = await supabase
+      .from("listings")
+      .select("*")
+      .eq("seller_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      listWrap.innerHTML = `<div class="cart-empty">Could not load listings. (You likely need a “select own listings” RLS policy.)</div>`;
       return;
     }
 
-    for (const l of listings) {
+    if (!rows || rows.length === 0) {
+      listWrap.innerHTML = `<div class="cart-empty">No listings yet. Create one on the left.</div>`;
+      return;
+    }
+
+    listWrap.innerHTML = "";
+    for (const r of rows) {
       const row = document.createElement("div");
       row.className = "panel rowitem";
       row.innerHTML = `
         <div class="left">
           <div class="thumb"></div>
           <div>
-            <div class="title">${l.title}</div>
-            <div class="meta">${l.condition} · $${money(l.price)} · ${l.status}</div>
+            <div class="title">${escapeHtml(r.card_id)} <span class="small">(${escapeHtml(r.condition)})</span></div>
+            <div class="meta">$${money(r.price)} · Stamped $${money(r.shipping_stamped)} · Tracked $${money(r.shipping_tracked)} · <b>${escapeHtml(r.status)}</b></div>
           </div>
         </div>
         <div class="row-right">
-          <button class="btn" type="button" data-edit>edit</button>
-          <button class="btn" type="button" data-toggle>${l.status === "Active" ? "pause" : "activate"}</button>
+          <button class="btn" type="button" data-toggle>${r.status === "active" ? "pause" : "activate"}</button>
           <button class="btn" type="button" data-del>delete</button>
         </div>
       `;
 
-      row.querySelector("[data-edit]").addEventListener("click", () => {
-        const nextPrice = prompt("New price (USD):", String(l.price));
-        if (nextPrice === null) return;
-        const nextCond = prompt("Condition:", l.condition);
-        if (nextCond === null) return;
-
-        const listings = getMyListings().map(x => x.id === l.id ? ({...x, price: Number(nextPrice)||x.price, condition: nextCond}) : x);
-        setMyListings(listings);
-        drawListings();
+      row.querySelector("[data-toggle]").addEventListener("click", async () => {
+        const next = r.status === "active" ? "paused" : "active";
+        const { error } = await supabase.from("listings").update({ status: next }).eq("id", r.id).eq("seller_id", user.id);
+        if (error) alert(error.message);
+        await loadMyListings();
       });
 
-      row.querySelector("[data-toggle]").addEventListener("click", () => {
-        const listings = getMyListings().map(x => x.id === l.id ? ({...x, status: x.status === "Active" ? "Paused" : "Active"}) : x);
-        setMyListings(listings);
-        drawListings();
-      });
-
-      row.querySelector("[data-del]").addEventListener("click", () => {
+      row.querySelector("[data-del]").addEventListener("click", async () => {
         if (!confirm("Delete this listing?")) return;
-        const listings = getMyListings().filter(x => x.id !== l.id);
-        setMyListings(listings);
-        drawListings();
+        const { error } = await supabase.from("listings").delete().eq("id", r.id).eq("seller_id", user.id);
+        if (error) alert(error.message);
+        await loadMyListings();
       });
 
-      wrap.appendChild(row);
+      listWrap.appendChild(row);
     }
   }
 
-  function drawOrders() {
-    if (!ordersWrap) return;
-    const orders = getOrders();
-    if (orders.length === 0) {
-      ordersWrap.innerHTML = `<div class="cart-empty">No demo orders yet. Place one via checkout.</div>`;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (msg) msg.textContent = "Saving…";
+
+    const card_id = document.getElementById("ls_card_id").value.trim();
+    const condition = document.getElementById("ls_condition").value;
+    const price = Number(document.getElementById("ls_price").value) || 0;
+    const shipping_stamped = Number(document.getElementById("ls_ship_stamped").value) || 0;
+    const shipping_tracked = Number(document.getElementById("ls_ship_tracked").value) || 0;
+
+    const { error } = await supabase.from("listings").insert({
+      card_id,
+      seller_id: user.id,
+      condition,
+      price,
+      shipping_stamped,
+      shipping_tracked,
+      status: "active"
+    });
+
+    if (error) {
+      if (msg) msg.textContent = error.message;
       return;
     }
-    ordersWrap.innerHTML = `
-      <table class="table">
-        <thead><tr><th>Order</th><th>Status</th><th>Total</th><th>Date</th></tr></thead>
-        <tbody>
-          ${orders.slice(0,10).map(o => `
-            <tr>
-              <td>${o.id}</td>
-              <td>${o.status}</td>
-              <td>$${money(o.subtotal)}</td>
-              <td>${new Date(o.createdAt).toLocaleString()}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    `;
-  }
 
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-
-    const title = document.getElementById("ls_title").value.trim();
-    const price = Number(document.getElementById("ls_price").value) || 0;
-    const condition = document.getElementById("ls_condition").value;
-    const status = "Active";
-
-    const listings = getMyListings();
-    listings.unshift({
-      id: "L-" + Math.random().toString(16).slice(2, 8),
-      title,
-      price,
-      condition,
-      status,
-      createdAt: new Date().toISOString()
-    });
-    setMyListings(listings);
+    if (msg) msg.textContent = "Listing published!";
     form.reset();
-    drawListings();
+    await loadMyListings();
   });
 
-  drawListings();
-  drawOrders();
+  await loadMyListings();
 }
 
-/***********************
-  Boot
-************************/
-document.addEventListener("DOMContentLoaded", () => {
-  // Cart always available
+/* =========================
+   Supabase: Requests page (Version B expects rq_era)
+========================= */
+async function initRequestsFromSupabase() {
+  const needs = document.getElementById("reqNeedsAuth");
+  const authed = document.getElementById("reqAuthed");
+  const form = document.getElementById("requestForm");
+  const msg = document.getElementById("requestMsg");
+
+  if (!needs || !authed || !form) return;
+
+  const { data } = await supabase.auth.getSession();
+  const user = data.session?.user;
+
+  if (!user) {
+    needs.style.display = "";
+    authed.style.display = "none";
+    return;
+  }
+
+  needs.style.display = "none";
+  authed.style.display = "";
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (msg) msg.textContent = "Submitting…";
+
+    const payload = {
+      user_id: user.id,
+      group_name: document.getElementById("rq_group").value.trim(),
+      era: (document.getElementById("rq_era")?.value || "").trim(),
+      member: (document.getElementById("rq_member")?.value || "").trim(),
+      card_type: (document.getElementById("rq_type")?.value || "").trim(),
+      store: (document.getElementById("rq_store")?.value || "").trim(),
+      round: (document.getElementById("rq_round")?.value || "").trim(),
+      notes: (document.getElementById("rq_notes")?.value || "").trim()
+    };
+
+    const { error } = await supabase.from("requests").insert(payload);
+    if (error) {
+      if (msg) msg.textContent = error.message;
+      return;
+    }
+
+    if (msg) msg.textContent = "Request submitted!";
+    form.reset();
+  });
+}
+
+/* =========================
+   Boot
+========================= */
+document.addEventListener("DOMContentLoaded", async () => {
+  markActiveNav();
+
+  // Cart
   ensureCartUI();
   updateCartCountUI();
   initAddToCartButtons();
 
-  // Browse page
-  const searchEl = document.getElementById("searchInput");
-  const typeEl = document.getElementById("typeFilter");
-  const sortEl = document.getElementById("sortFilter");
-  const clearBtn = document.getElementById("clearFiltersBtn");
-  const savedOnlyEl = document.getElementById("savedOnly");
-  const eraEl = document.getElementById("eraFilter");
-  const groupEl = document.getElementById("groupFilter");
-  const memberEl = document.getElementById("memberFilter");
-  if (groupEl && memberEl) {
-    updateMemberDropdown();                // populate on load
-    groupEl.addEventListener("change", () => {
-      updateMemberDropdown();              // change members when group changes
-      applyBrowseFilters();                // re-filter results
-    });
-  }
+  // Auth CTA
+  await renderAuthCta();
+  supabase.auth.onAuthStateChange(async () => {
+    await renderAuthCta();
+    await initDashboardFromSupabase();
+    await initRequestsFromSupabase();
+  });
 
-  if (eraEl) eraEl.addEventListener("change", applyBrowseFilters);
-  if (memberEl) memberEl.addEventListener("change", applyBrowseFilters);
-
-
-  if (searchEl && groupEl && typeEl && sortEl) {
-    searchEl.addEventListener("input", applyBrowseFilters);
-    groupEl.addEventListener("change", applyBrowseFilters);
-    typeEl.addEventListener("change", applyBrowseFilters);
-    sortEl.addEventListener("change", applyBrowseFilters);
-    if (savedOnlyEl) savedOnlyEl.addEventListener("change", applyBrowseFilters);
-
-    if (clearBtn) {
-      clearBtn.addEventListener("click", () => {
-        searchEl.value = "";
-        groupEl.value = "";
-        typeEl.value = "";
-        sortEl.value = "";
-        if (eraEl) eraEl.value = "";
-        if (memberEl) memberEl.value = "";
-        if (savedOnlyEl) savedOnlyEl.checked = false;
-        applyBrowseFilters();
-      });
-    }
-    applyBrowseFilters();
-  }
-
-  // Wishlist pages
-  initBrowseWishlistButtons();
-  initItemWishlistButton();
+  // Local pages
   renderSavedPage();
+  initBrowseFilters();
+  initRowSaveButtons();
 
-  // Request, checkout, success, dashboard
-  initRequestPage();
-  initCheckoutPage();
-  initOrderSuccessPage();
-  renderDashboard();
+  // Supabase pages
+  await initItemFromSupabase();
+  await initDashboardFromSupabase();
+  await initRequestsFromSupabase();
 });
-
-function updateMemberDropdown() {
-  const groupEl = document.getElementById("groupFilter");
-  const memberEl = document.getElementById("memberFilter");
-  if (!groupEl || !memberEl) return;
-
-  const selectedGroup = norm(groupEl.value);
-  const currentMember = memberEl.value;
-
-  // Reset
-  memberEl.innerHTML = `<option value="">Any member</option>`;
-
-  if (!selectedGroup || !GROUP_MEMBERS[selectedGroup]) {
-    // If no group selected, allow all members across groups
-    const all = new Set();
-    Object.values(GROUP_MEMBERS).forEach(arr => arr.forEach(m => all.add(m)));
-    [...all].sort().forEach(name => {
-      const opt = document.createElement("option");
-      opt.value = norm(name);
-      opt.textContent = name;
-      memberEl.appendChild(opt);
-    });
-  } else {
-    GROUP_MEMBERS[selectedGroup].forEach(name => {
-      const opt = document.createElement("option");
-      opt.value = norm(name);
-      opt.textContent = name;
-      memberEl.appendChild(opt);
-    });
-  }
-
-  // Try to preserve selected member if still valid
-  memberEl.value = currentMember;
-}

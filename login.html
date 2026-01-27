@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login · K-Card Market</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="panel nav">
+      <div class="brand"><div class="logo"></div><div>K-Card Market<div class="small">Login</div></div></div>
+      <button class="hamburger" onclick="toggleMenu()">Menu</button>
+      <nav class="navlinks">
+        <a data-nav href="index.html">Home</a>
+        <a data-nav href="browse.html">Browse</a>
+        <a data-nav href="about.html">About</a>
+      </nav>
+      <div class="nav-cta">
+        <a class="btn" href="browse.html">Back</a>
+      </div>
+    </header>
+
+    <section class="panel card" style="margin-top:18px">
+      <h2 style="margin:0 0 8px 0;">Sign in</h2>
+      <p class="small" style="margin:0 0 12px 0;">Use email (magic link or password depending on your Auth settings).</p>
+
+      <form class="form" id="loginForm">
+        <input class="input" id="email" placeholder="Email" type="email" required />
+        <input class="input" id="password" placeholder="Password (if enabled)" type="password" />
+        <button class="btn primary" type="submit">Continue</button>
+        <div class="small" id="msg"></div>
+      </form>
+    </section>
+  </div>
+
+  <script type="module">
+    import { supabase } from "./supabaseClient.js";
+
+    const form = document.getElementById("loginForm");
+    const msg = document.getElementById("msg");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msg.textContent = "Working…";
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      // If password is provided, try password sign-in; otherwise send magic link
+      if (password) {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        msg.textContent = error ? error.message : "Signed in! Go back to Browse.";
+      } else {
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: { emailRedirectTo: location.origin + location.pathname.replace("login.html", "browse.html") }
+        });
+        msg.textContent = error ? error.message : "Check your email for a sign-in link.";
+      }
+    });
+  </script>
+</body>
+</html>

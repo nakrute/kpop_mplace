@@ -13,7 +13,7 @@
         <div class="logo"></div>
         <div>
           K-Card Market
-          <div class="small" id="pageSubtitle">Browse</div>
+          <div class="small">Browse</div>
         </div>
       </div>
 
@@ -29,20 +29,12 @@
         <a data-nav href="about.html">About</a>
       </nav>
 
-      <div class="nav-cta">
-        <a class="btn" href="checkout.html">Checkout</a>
-        <a class="btn primary" href="dashboard.html">List a card</a>
-      </div>
+      <div class="nav-cta" id="authSlot"></div>
     </header>
 
     <section class="panel toolbar">
       <div class="filters">
-        <input
-          id="searchInput"
-          class="input"
-          placeholder="Search: group, album, member, store POB…"
-          aria-label="Search"
-        />
+        <input id="searchInput" class="input" placeholder="Search…" aria-label="Search"/>
 
         <select id="groupFilter" aria-label="Group filter">
           <option value="">Any group</option>
@@ -51,20 +43,14 @@
           <option value="twice">TWICE</option>
         </select>
 
-        <!-- NEW: Era/Album -->
         <select id="eraFilter" aria-label="Era/Album filter">
           <option value="">Any era/album</option>
           <option value="fml">FML</option>
           <option value="5-star">5-STAR</option>
-          <!-- add more as you add catalog -->
         </select>
 
-        <!-- NEW: Member -->
         <select id="memberFilter" aria-label="Member filter">
           <option value="">Any member</option>
-          <option value="mingyu">Mingyu</option>
-          <option value="hyunjin">Hyunjin</option>
-          <!-- add more as you add catalog -->
         </select>
 
         <select id="typeFilter" aria-label="Type filter">
@@ -80,97 +66,25 @@
           <option value="price-asc">Price: Low → High</option>
           <option value="price-desc">Price: High → Low</option>
           <option value="newest">Newest</option>
-          <option value="saved-first">Saved first</option>
         </select>
-
-        <label class="toggle" title="Show only items you saved">
-          <input type="checkbox" id="savedOnly" />
-          Saved only
-        </label>
 
         <button id="clearFiltersBtn" class="btn" type="button">Clear</button>
       </div>
 
-      <div id="resultsCount" class="small">Showing all results</div>
+      <div id="resultsCount" class="small">Showing 0</div>
     </section>
-
-    <div id="activeChips" class="chips"></div>
 
     <section id="noResults" class="panel card" style="margin-top:14px; display:none;">
       <h3 style="margin:0 0 6px 0;">No matches</h3>
       <p class="small" style="margin:0;">Try clearing filters or searching a broader term.</p>
     </section>
 
-    <section id="browseList" class="list">
-      <!-- ITEM 1 -->
-      <div
-        class="panel rowitem"
-        data-id="svt-fml-weverse-pob-mingyu-r1"
-        data-title="SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)"
-        data-href="item.html"
-        data-group="seventeen"
-        data-era="fml"
-        data-member="mingyu"
-        data-type="pob"
-        data-price="9"
-        data-date="2026-01-04"
-        data-img="https://placehold.co/96x96/png?text=SVT"
-        data-tags="seventeen svt fml weverse pob mingyu round 1 verified 18 listings us kr ph"
-      >
-        <a class="left" href="item.html">
-          <img class="thumbimg" alt="thumb" src="https://placehold.co/96x96/png?text=SVT" />
-          <div>
-            <div class="title">SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)</div>
-            <div class="meta">Verified · 18 listings · Ships from US/KR/PH</div>
-          </div>
-        </a>
-
-        <div class="row-right">
-          <button class="heart" type="button" aria-label="Save item" data-save-btn>♡</button>
-          <div style="text-align:right">
-            <div class="price">From $9.00</div>
-            <div class="pill">View</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ITEM 2 -->
-      <div
-        class="panel rowitem"
-        data-id="skz-5star-album-pc-hyunjin-b"
-        data-title="Stray Kids · 5-STAR · Album PC · Hyunjin (Ver. B)"
-        data-href="item.html"
-        data-group="stray kids"
-        data-era="5-star"
-        data-member="hyunjin"
-        data-type="album pc"
-        data-price="6.5"
-        data-date="2026-01-10"
-        data-img="https://placehold.co/96x96/png?text=SKZ"
-        data-tags="stray kids skz 5-star 5star album pc hyunjin ver b unverified 7 listings"
-      >
-        <a class="left" href="item.html">
-          <img class="thumbimg" alt="thumb" src="https://placehold.co/96x96/png?text=SKZ" />
-          <div>
-            <div class="title">Stray Kids · 5-STAR · Album PC · Hyunjin (Ver. B)</div>
-            <div class="meta">Unverified · 7 listings</div>
-          </div>
-        </a>
-
-        <div class="row-right">
-          <button class="heart" type="button" aria-label="Save item" data-save-btn>♡</button>
-          <div style="text-align:right">
-            <div class="price">From $6.50</div>
-            <div class="pill">View</div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <section id="browseList" class="list"></section>
 
     <footer class="footer">© <span id="y"></span> K-Card Market</footer>
   </div>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
   <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
 </body>
 </html>

@@ -13,12 +13,12 @@
         <div class="logo"></div>
         <div>
           K-Card Market
-          <div class="small" id="pageSubtitle">PAGE_SUBTITLE</div>
+          <div class="small" id="pageSubtitle">Request a card</div>
         </div>
       </div>
-    
+
       <button class="hamburger" onclick="toggleMenu()">Menu</button>
-    
+
       <nav class="navlinks">
         <a data-nav href="index.html">Home</a>
         <a data-nav href="browse.html">Browse</a>
@@ -28,40 +28,50 @@
         <a data-nav href="dashboard.html">Sell</a>
         <a data-nav href="about.html">About</a>
       </nav>
-    
-      <div class="nav-cta">
+
+      <div class="nav-cta" id="authCta">
         <a class="btn" href="checkout.html">Checkout</a>
         <a class="btn primary" href="dashboard.html">List a card</a>
       </div>
     </header>
 
-    <section class="panel card" style="margin-top:18px">
-      <h2 style="margin:0 0 8px 0">Request a catalog entry (demo)</h2>
-      <p class="small" style="margin:0">Saved locally in your browser. Later this becomes a real submission queue.</p>
+    <section id="reqNeedsAuth" class="panel card" style="margin-top:18px; display:none;">
+      <h2 style="margin:0 0 8px 0;">Sign in required</h2>
+      <p class="small" style="margin:0 0 12px 0;">Please sign in to submit catalog requests.</p>
+      <a class="btn primary" href="login.html">Go to Login</a>
+    </section>
+
+    <section id="reqAuthed" class="panel card" style="margin-top:18px; display:none;">
+      <h2 style="margin:0 0 8px 0">Request a catalog entry</h2>
+      <p class="small" style="margin:0">This submits to Supabase `requests`.</p>
 
       <form class="form" id="requestForm">
         <div class="row">
           <input id="rq_group" class="input" placeholder="Group (e.g., SEVENTEEN)" required />
-          <input id="rq_album" class="input" placeholder="Album/Release (e.g., FML)" required />
+          <input id="rq_era" class="input" placeholder="Era/Album (e.g., FML)" />
         </div>
+
         <div class="row">
-          <input id="rq_member" class="input" placeholder="Member" />
+          <input id="rq_member" class="input" placeholder="Member (optional)" />
           <input id="rq_type" class="input" placeholder="Type (POB / Album PC / Lucky Draw…)" />
         </div>
+
         <div class="row">
           <input id="rq_store" class="input" placeholder="Store (Weverse / Ktown4u / …)" />
           <input id="rq_round" class="input" placeholder="Round (if applicable)" />
         </div>
-        <input id="rq_notes" class="input" placeholder="Notes / link to reference scan (optional)" />
+
+        <input id="rq_notes" class="input" placeholder="Notes / reference link (optional)" />
+
         <button class="btn primary" type="submit">Submit request</button>
-        <div id="requestMsg" class="small"></div>
+        <div class="small" id="requestMsg"></div>
       </form>
     </section>
 
     <footer class="footer">© <span id="y"></span> K-Card Market</footer>
   </div>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
   <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
 </body>
 </html>

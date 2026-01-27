@@ -13,12 +13,12 @@
         <div class="logo"></div>
         <div>
           K-Card Market
-          <div class="small" id="pageSubtitle">PAGE_SUBTITLE</div>
+          <div class="small" id="pageSubtitle">Seller dashboard</div>
         </div>
       </div>
-    
+
       <button class="hamburger" onclick="toggleMenu()">Menu</button>
-    
+
       <nav class="navlinks">
         <a data-nav href="index.html">Home</a>
         <a data-nav href="browse.html">Browse</a>
@@ -28,26 +28,29 @@
         <a data-nav href="dashboard.html">Sell</a>
         <a data-nav href="about.html">About</a>
       </nav>
-    
-      <div class="nav-cta">
+
+      <div class="nav-cta" id="authCta">
         <a class="btn" href="checkout.html">Checkout</a>
         <a class="btn primary" href="dashboard.html">List a card</a>
       </div>
     </header>
 
-    <section class="panel card" style="margin-top:18px">
-      <h2 style="margin:0 0 8px 0;">Browse</h2>
-      <p class="small" style="margin:0;">Find photocards, compare listings, and save what you want.</p>
+    <section id="dashNeedsAuth" class="panel card" style="margin-top:18px; display:none;">
+      <h2 style="margin:0 0 8px 0;">Sign in required</h2>
+      <p class="small" style="margin:0 0 12px 0;">You need to be logged in to create and manage listings.</p>
+      <a class="btn primary" href="login.html">Go to Login</a>
     </section>
 
-
-    <section class="two-col">
+    <section id="dashAuthed" class="two-col" style="margin-top:18px; display:none;">
       <div class="panel card">
-        <h2 style="margin:0 0 8px 0">Create a listing (demo)</h2>
-        <p class="small" style="margin:0">Saved to your browser (localStorage). Later this becomes Supabase.</p>
+        <h2 style="margin:0 0 8px 0">Create a listing</h2>
+        <p class="small" style="margin:0">
+          This writes to Supabase `listings` (RLS protects other users).
+        </p>
 
         <form class="form" id="listingForm">
-          <input id="ls_title" class="input" placeholder="Listing title (e.g., SVT FML Weverse POB Mingyu R1)" required />
+          <input id="ls_card_id" class="input" placeholder="Card ID (e.g., svt-fml-weverse-pob-mingyu-r1)" required />
+
           <div class="row">
             <select id="ls_condition" class="input" required>
               <option value="Mint">Condition: Mint</option>
@@ -55,27 +58,29 @@
               <option value="Good">Condition: Good</option>
               <option value="Damaged">Condition: Damaged</option>
             </select>
-            <input id="ls_price" class="input" placeholder="Price (USD)" required />
+            <input id="ls_price" class="input" placeholder="Item price (USD)" required />
           </div>
+
+          <div class="row">
+            <input id="ls_ship_stamped" class="input" placeholder="Stamped shipping (USD)" value="0" required />
+            <input id="ls_ship_tracked" class="input" placeholder="Tracked shipping (USD)" value="0" required />
+          </div>
+
           <button class="btn primary" type="submit">Publish listing</button>
+          <div class="small" id="listingMsg"></div>
         </form>
       </div>
 
       <aside class="panel card">
         <h3 class="section-title">Your listings</h3>
-        <div id="myListings"></div>
+        <div id="myListings" class="list"></div>
       </aside>
-    </section>
-
-    <section class="panel card" style="margin-top:14px">
-      <h3 class="section-title">Orders (demo)</h3>
-      <div id="myOrders"></div>
     </section>
 
     <footer class="footer">© <span id="y"></span> K-Card Market</footer>
   </div>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
   <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
 </body>
 </html>

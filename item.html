@@ -13,12 +13,12 @@
         <div class="logo"></div>
         <div>
           K-Card Market
-          <div class="small" id="pageSubtitle">PAGE_SUBTITLE</div>
+          <div class="small" id="pageSubtitle">Item</div>
         </div>
       </div>
-    
+
       <button class="hamburger" onclick="toggleMenu()">Menu</button>
-    
+
       <nav class="navlinks">
         <a data-nav href="index.html">Home</a>
         <a data-nav href="browse.html">Browse</a>
@@ -28,73 +28,67 @@
         <a data-nav href="dashboard.html">Sell</a>
         <a data-nav href="about.html">About</a>
       </nav>
-    
-      <div class="nav-cta">
+
+      <div class="nav-cta" id="authCta">
+        <!-- app.js will populate Login/Logout -->
         <a class="btn" href="checkout.html">Checkout</a>
         <a class="btn primary" href="dashboard.html">List a card</a>
       </div>
     </header>
 
-    <section
-      class="two-col"
-      id="itemMeta"
-      data-id="svt-fml-weverse-pob-mingyu-r1"
-      data-title="SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)"
-      data-href="item.html"
-      data-img="https://placehold.co/256x256/png?text=SVT"
-    >
+    <section class="two-col" style="margin-top:18px;">
       <div class="panel card">
-        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-          <div style="display:flex; gap:12px; align-items:flex-start;">
-            <img class="thumbimg" alt="thumb" style="width:72px;height:72px;border-radius:18px;"
-                 src="https://placehold.co/256x256/png?text=SVT" />
-            <div>
-              <div class="badge">Verified catalog entry</div>
-              <h2 style="margin:10px 0 8px 0">SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)</h2>
-              <p class="small" style="margin:0;">Type: POB · Store: Weverse · Region: KR · Notes: Round 1</p>
+        <div id="itemHeaderLoading" class="small">Loading card…</div>
+
+        <div id="itemHeader" style="display:none;">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+              <img id="itemImage" class="thumbimg" alt="thumb"
+                   style="width:72px;height:72px;border-radius:18px;"
+                   src="https://placehold.co/256x256/png?text=Card" />
+              <div>
+                <div class="badge" id="itemBadge">Catalog</div>
+                <h2 id="itemTitle" style="margin:10px 0 8px 0;">—</h2>
+                <p class="small" id="itemMetaLine" style="margin:0;">—</p>
+              </div>
+            </div>
+
+            <button class="heart" type="button" aria-label="Save item" id="itemSaveBtn">♡</button>
+          </div>
+
+          <div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px;">
+            <div class="card">
+              <h3>Price stats (live)</h3>
+              <p class="small" id="itemStats">—</p>
+            </div>
+            <div class="card">
+              <h3>Card attributes</h3>
+              <p class="small" id="itemAttrs" style="margin:0;">—</p>
             </div>
           </div>
 
-          <button class="heart" type="button" aria-label="Save item" id="itemSaveBtn">♡</button>
-        </div>
-
-        <div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px;">
-          <div class="card">
-            <h3>Price stats</h3>
-            <p class="small">Lowest: $9.00 · Median: $12.50 · High: $22.00</p>
+          <div class="chips" style="margin-top:12px;">
+            <span class="chip">Report listing (demo)</span>
+            <span class="chip">Verify entry (demo)</span>
           </div>
-          <div class="card">
-            <h3>Card attributes</h3>
-            <p class="small" style="margin:0;">
-              Group: SEVENTEEN<br/>
-              Release: FML<br/>
-              Member: Mingyu<br/>
-              Type: POB<br/>
-              Store: Weverse<br/>
-              Round: 1
-            </p>
-          </div>
-        </div>
-
-        <div class="chips">
-          <span class="chip">Report listing (demo)</span>
-          <span class="chip">Verify entry (demo)</span>
         </div>
       </div>
 
       <aside class="panel card">
         <h3 class="section-title">Quick actions</h3>
-        <a class="btn primary" style="width:100%" href="request.html">Request a variant</a>
+        <a class="btn" style="width:100%" href="browse.html">Back to browse</a>
         <div style="height:10px"></div>
-        <a class="btn" style="width:100%" href="seller.html">Browse sellers</a>
-        <p class="small" style="margin-top:12px">Tip: tap 🛒 to view your cart anytime.</p>
+        <a class="btn primary" style="width:100%" href="dashboard.html">Create a listing</a>
+        <p class="small" style="margin-top:12px;">Tip: tap 🛒 to view your cart anytime.</p>
       </aside>
     </section>
 
     <section class="panel card" style="margin-top:14px">
       <h3 class="section-title">Active listings</h3>
 
-      <table class="table">
+      <div id="listingsLoading" class="small">Loading listings…</div>
+
+      <table class="table" id="listingsTable" style="display:none;">
         <thead>
           <tr>
             <th>Seller</th>
@@ -104,95 +98,18 @@
             <th></th>
           </tr>
         </thead>
-
-        <tbody>
-          <tr>
-            <td><a href="seller.html">MinCardShop</a></td>
-            <td>NM</td>
-            <td>$9.00</td>
-            <td>Stamped/Tracked</td>
-            <td style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button
-                class="btn primary"
-                type="button"
-                data-add-cart
-                data-card-id="svt-fml-weverse-pob-mingyu-r1"
-                data-item-title="SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)"
-                data-item-seller="MinCardShop"
-                data-item-price="9.00"
-                data-shipping-options='[{"label":"Stamped","cost":1.50},{"label":"Tracked","cost":4.00}]'
-                data-shipping-label="Stamped"
-                data-shipping-cost="1.50"
-              >
-                Add (Stamped)
-              </button>
-
-              <button
-                class="btn"
-                type="button"
-                data-add-cart
-                data-card-id="svt-fml-weverse-pob-mingyu-r1"
-                data-item-title="SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)"
-                data-item-seller="MinCardShop"
-                data-item-price="9.00"
-                data-shipping-options='[{"label":"Stamped","cost":1.50},{"label":"Tracked","cost":4.00}]'
-                data-shipping-label="Tracked"
-                data-shipping-cost="4.00"
-              >
-                Add (Tracked)
-              </button>
-            </td>
-          </tr>
-
-          <tr>
-            <td><a href="seller.html">KpopBay</a></td>
-            <td>Mint</td>
-            <td>$11.00</td>
-            <td>Stamped/Tracked</td>
-            <td style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button
-                class="btn primary"
-                type="button"
-                data-add-cart
-                data-card-id="svt-fml-weverse-pob-mingyu-r1"
-                data-item-title="SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)"
-                data-item-seller="KpopBay"
-                data-item-price="11.00"
-                data-shipping-options='[{"label":"Stamped","cost":2.00},{"label":"Tracked","cost":4.50}]'
-                data-shipping-label="Stamped"
-                data-shipping-cost="2.00"
-              >
-                Add (Stamped)
-              </button>
-
-              <button
-                class="btn"
-                type="button"
-                data-add-cart
-                data-card-id="svt-fml-weverse-pob-mingyu-r1"
-                data-item-title="SEVENTEEN · FML · Weverse POB · Mingyu (Round 1)"
-                data-item-seller="KpopBay"
-                data-item-price="11.00"
-                data-shipping-options='[{"label":"Stamped","cost":2.00},{"label":"Tracked","cost":4.50}]'
-                data-shipping-label="Tracked"
-                data-shipping-cost="4.50"
-              >
-                Add (Tracked)
-              </button>
-            </td>
-          </tr>
-        </tbody>
+        <tbody id="listingsBody"></tbody>
       </table>
 
-      <p class="small" style="margin-top:10px">
-        Demo cart only — checkout is a simulated flow.
-      </p>
+      <div id="listingsEmpty" class="cart-empty" style="display:none;">
+        No active listings yet. Be the first to list this card.
+      </div>
     </section>
 
     <footer class="footer">© <span id="y"></span> K-Card Market</footer>
   </div>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
   <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
 </body>
 </html>
