@@ -395,8 +395,11 @@ async function renderAuthCta() {
   const cta = document.getElementById("authCta");
   if (!cta) return;
 
-  // Preserve existing buttons (Checkout/List a card) and prepend auth control
-  const existing = cta.innerHTML;
+  // Store the original CTA buttons once (Checkout + List a card)
+  if (!cta.dataset.base) {
+    cta.dataset.base = cta.innerHTML;
+  }
+  const base = cta.dataset.base;
 
   const { data } = await supabase.auth.getSession();
   const session = data.session;
@@ -404,22 +407,23 @@ async function renderAuthCta() {
   if (session?.user) {
     cta.innerHTML = `
       <button class="btn" type="button" id="logoutBtn">Logout</button>
-      ${existing}
+      ${base}
     `;
+
     cta.querySelector("#logoutBtn").addEventListener("click", async () => {
       await supabase.auth.signOut();
       await renderAuthCta();
-      // Re-run gated pages if you’re currently on them
       await initDashboardFromSupabase();
       await initRequestsFromSupabase();
     });
   } else {
     cta.innerHTML = `
       <a class="btn" href="login.html">Login</a>
-      ${existing}
+      ${base}
     `;
   }
 }
+
 
 /* =========================
    Browse: filters + auto-member dropdown
