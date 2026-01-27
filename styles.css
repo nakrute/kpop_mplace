@@ -773,3 +773,19 @@ a:hover{opacity:.95}
     bottom: 12px;
   }
 }
+
+#authBtnSlot{
+  min-width: 92px;
+  display: flex;
+  justify-content: flex-end;
+}
+#authCta{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.nav-cta{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}

@@ -391,38 +391,26 @@ function renderCart() {
 /* =========================
    Auth CTA (Version B uses #authCta)
 ========================= */
-async function renderAuthCta() {
-  const cta = document.getElementById("authCta");
-  if (!cta) return;
-
-  // Store the original CTA buttons once (Checkout + List a card)
-  if (!cta.dataset.base) {
-    cta.dataset.base = cta.innerHTML;
-  }
-  const base = cta.dataset.base;
+async function renderAuthButton() {
+  const slot = document.getElementById("authBtnSlot");
+  if (!slot) return;
 
   const { data } = await supabase.auth.getSession();
   const session = data.session;
 
   if (session?.user) {
-    cta.innerHTML = `
-      <button class="btn" type="button" id="logoutBtn">Logout</button>
-      ${base}
-    `;
-
-    cta.querySelector("#logoutBtn").addEventListener("click", async () => {
+    slot.innerHTML = `<button class="btn" type="button" id="logoutBtn">Logout</button>`;
+    slot.querySelector("#logoutBtn").addEventListener("click", async () => {
       await supabase.auth.signOut();
-      await renderAuthCta();
+      await renderAuthButton();
       await initDashboardFromSupabase();
       await initRequestsFromSupabase();
     });
   } else {
-    cta.innerHTML = `
-      <a class="btn" href="login.html">Login</a>
-      ${base}
-    `;
+    slot.innerHTML = `<a class="btn" href="login.html">Login</a>`;
   }
 }
+
 
 
 /* =========================
@@ -963,9 +951,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   initAddToCartButtons();
 
   // Auth CTA
-  await renderAuthCta();
+  await renderAuthButton();
   supabase.auth.onAuthStateChange(async () => {
-    await renderAuthCta();
+    await renderAuthButton();
     await initDashboardFromSupabase();
     await initRequestsFromSupabase();
   });
