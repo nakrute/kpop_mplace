@@ -400,17 +400,6 @@ async function renderAuthButton() {
 
   if (session?.user) {
     slot.innerHTML = `<button class="btn" type="button" data-action="logout">Logout</button>`;
-
-    slot.querySelector("#logoutBtn").addEventListener("click", async () => {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        alert(error.message);
-        return;
-      }
-
-      // Force a clean UI reset + obvious feedback
-      location.href = "browse.html";
-    });
   } else {
     slot.innerHTML = `<a class="btn" href="login.html">Login</a>`;
   }
@@ -1013,6 +1002,7 @@ async function initRequestsFromSupabase() {
 
 function renderHeader() {
   const el = document.getElementById("siteHeader");
+  console.log("renderHeader:", !!el, location.pathname);
   if (!el) return;
 
   el.className = "panel nav";
