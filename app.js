@@ -399,18 +399,23 @@ async function renderAuthButton() {
   const session = data.session;
 
   if (session?.user) {
-    slot.innerHTML = `<button class="btn" type="button" id="logoutBtn">Logout</button>`;
+    slot.innerHTML = `<button class="btn" type="button" data-action="logout">Logout</button>`;
+
     slot.querySelector("#logoutBtn").addEventListener("click", async () => {
-      await supabase.auth.signOut();
-      await renderAuthButton();
-      await initDashboardFromSupabase();
-      await initRequestsFromSupabase();
-      await initAccountFromSupabase();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      // Force a clean UI reset + obvious feedback
+      location.href = "browse.html";
     });
   } else {
     slot.innerHTML = `<a class="btn" href="login.html">Login</a>`;
   }
 }
+
 
 async function initAccountFromSupabase() {
   const needs = document.getElementById("acctNeedsAuth");
@@ -1036,4 +1041,29 @@ document.addEventListener("DOMContentLoaded", async () => {
   await initDashboardFromSupabase();
   await initRequestsFromSupabase();
   await initAccountFromSupabase();
+
+  document.addEventListener("click", async (e) => {
+    const el = e.target.closest('[data-action="logout"]');
+    if (!el) return;
+    e.preventDefault();
+    await doLogout();
+  });
+
 });
+
+async function doLogout() {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      alert("Logout failed: " + error.message);
+      return;
+    }
+  } catch (e) {
+    alert("Logout failed: " + (e?.message || e));
+    return;
+  }
+
+  // Make it obvious it worked
+  location.href = "browse.html";
+}
+
