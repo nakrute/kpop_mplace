@@ -9,8 +9,16 @@
 <body>
   <div class="container">
     <header class="panel nav">
-      <div class="brand"><div class="logo"></div><div>K-Card Market<div class="small">Login</div></div></div>
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          K-Card Market
+          <div class="small" id="pageSubtitle">Login / Sign up</div>
+        </div>
+      </div>
+
       <button class="hamburger" onclick="toggleMenu()">Menu</button>
+
       <nav class="navlinks">
         <a data-nav href="index.html">Home</a>
         <a data-nav href="browse.html">Browse</a>
@@ -19,11 +27,11 @@
         <a data-nav href="seller.html">Sellers</a>
         <a data-nav href="dashboard.html">Sell</a>
         <a data-nav href="about.html">About</a>
+        <a data-nav href="account.html">Account</a>
       </nav>
 
       <div class="nav-cta">
         <div id="authBtnSlot"></div>
-
         <div id="authCta">
           <a class="btn" href="checkout.html">Checkout</a>
           <a class="btn primary" href="dashboard.html">List a card</a>
@@ -31,44 +39,125 @@
       </div>
     </header>
 
-    <section class="panel card" style="margin-top:18px">
-      <h2 style="margin:0 0 8px 0;">Sign in</h2>
-      <p class="small" style="margin:0 0 12px 0;">Use email (magic link or password depending on your Auth settings).</p>
+    <section class="two-col" style="margin-top:18px;">
+      <div class="panel card">
+        <h2 style="margin:0 0 8px 0;">Sign in</h2>
+        <p class="small" style="margin:0 0 12px 0;">
+          Use password sign-in, or request a magic link.
+        </p>
 
-      <form class="form" id="loginForm">
-        <input class="input" id="email" placeholder="Email" type="email" required />
-        <input class="input" id="password" placeholder="Password (if enabled)" type="password" />
-        <button class="btn primary" type="submit">Continue</button>
-        <div class="small" id="msg"></div>
-      </form>
+        <form class="form" id="loginForm">
+          <input class="input" id="li_email" placeholder="Email" type="email" required />
+          <input class="input" id="li_password" placeholder="Password (if you use password sign-in)" type="password" />
+          <div class="row">
+            <button class="btn primary" type="submit">Sign in</button>
+            <button class="btn" type="button" id="magicLinkBtn">Send magic link</button>
+          </div>
+          <div class="small" id="loginMsg"></div>
+        </form>
+      </div>
+
+      <aside class="panel card">
+        <h2 style="margin:0 0 8px 0;">Create account</h2>
+        <p class="small" style="margin:0 0 12px 0;">
+          Make a new account using email + password.
+        </p>
+
+        <form class="form" id="signupForm">
+          <input class="input" id="su_email" placeholder="Email" type="email" required />
+          <input class="input" id="su_password" placeholder="Password (min 6 chars)" type="password" required />
+          <button class="btn primary" type="submit">Create account</button>
+          <div class="small" id="signupMsg"></div>
+        </form>
+
+        <div class="small" style="margin-top:12px;">
+          After signing in, go to <a href="account.html">Account</a> to set your seller info.
+        </div>
+      </aside>
     </section>
+
+    <footer class="footer">© <span id="y"></span> K-Card Market</footer>
   </div>
 
   <script type="module">
     import { supabase } from "./supabaseClient.js";
 
-    const form = document.getElementById("loginForm");
-    const msg = document.getElementById("msg");
+    // keep year
+    document.getElementById("y").textContent = new Date().getFullYear();
 
-    form.addEventListener("submit", async (e) => {
+    // If already logged in, send to account
+    const { data: s0 } = await supabase.auth.getSession();
+    if (s0.session?.user) {
+      location.href = "account.html";
+    }
+
+    const loginMsg = document.getElementById("loginMsg");
+    const signupMsg = document.getElementById("signupMsg");
+
+    // Password sign-in
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      msg.textContent = "Working…";
+      loginMsg.textContent = "Signing in…";
 
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
+      const email = document.getElementById("li_email").value.trim();
+      const password = document.getElementById("li_password").value;
 
-      // If password is provided, try password sign-in; otherwise send magic link
-      if (password) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        msg.textContent = error ? error.message : "Signed in! Go back to Browse.";
-      } else {
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: location.origin + location.pathname.replace("login.html", "browse.html") }
-        });
-        msg.textContent = error ? error.message : "Check your email for a sign-in link.";
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        loginMsg.textContent = error.message;
+        return;
       }
+      loginMsg.textContent = "Signed in! Redirecting…";
+      location.href = "account.html";
     });
+
+    // Magic link
+    document.getElementById("magicLinkBtn").addEventListener("click", async () => {
+      loginMsg.textContent = "Sending magic link…";
+      const email = document.getElementById("li_email").value.trim();
+      if (!email) {
+        loginMsg.textContent = "Enter your email first.";
+        return;
+      }
+
+      const redirectTo = location.origin + location.pathname.replace("login.html", "account.html");
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: redirectTo }
+      });
+
+      loginMsg.textContent = error ? error.message : "Check your email for the sign-in link.";
+    });
+
+    // Sign up
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      signupMsg.textContent = "Creating account…";
+
+      const email = document.getElementById("su_email").value.trim();
+      const password = document.getElementById("su_password").value;
+
+      const redirectTo = location.origin + location.pathname.replace("login.html", "account.html");
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: redirectTo }
+      });
+
+      if (error) {
+        signupMsg.textContent = error.message;
+        return;
+      }
+
+      // If email confirmations are enabled, they must confirm; otherwise they might be logged in instantly.
+      signupMsg.textContent = "Account created! Check your email to confirm (if enabled), then sign in.";
+    });
+  </script>
+
+  <script>
+    // keep your hamburger working on this page even without app.js
+    function toggleMenu(){ document.querySelector(".nav")?.classList.toggle("open"); }
   </script>
 </body>
 </html>
