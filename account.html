@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Account · K-Card Market</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="panel nav">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          K-Card Market
+          <div class="small" id="pageSubtitle">Account</div>
+        </div>
+      </div>
+
+      <button class="hamburger" onclick="toggleMenu()">Menu</button>
+
+      <nav class="navlinks">
+        <a data-nav href="index.html">Home</a>
+        <a data-nav href="browse.html">Browse</a>
+        <a data-nav href="saved.html">Saved</a>
+        <a data-nav href="request.html">Request</a>
+        <a data-nav href="seller.html">Sellers</a>
+        <a data-nav href="dashboard.html">Sell</a>
+        <a data-nav href="about.html">About</a>
+        <a data-nav href="account.html">Account</a>
+      </nav>
+
+      <div class="nav-cta">
+        <div id="authBtnSlot"></div>
+        <div id="authCta">
+          <a class="btn" href="checkout.html">Checkout</a>
+          <a class="btn primary" href="dashboard.html">List a card</a>
+        </div>
+      </div>
+    </header>
+
+    <section id="acctNeedsAuth" class="panel card" style="margin-top:18px; display:none;">
+      <h2 style="margin:0 0 8px 0;">Sign in required</h2>
+      <p class="small" style="margin:0 0 12px 0;">Please sign in to edit your account.</p>
+      <a class="btn primary" href="login.html">Go to Login</a>
+    </section>
+
+    <section id="acctAuthed" class="two-col" style="margin-top:18px; display:none;">
+      <div class="panel card">
+        <h2 style="margin:0 0 8px 0;">Your profile</h2>
+        <p class="small" style="margin:0 0 14px 0;">This saves to Supabase <code>profiles</code>.</p>
+
+        <form class="form" id="accountForm">
+          <input id="ac_display_name" class="input" placeholder="Display name (e.g., nakrute)" />
+
+          <div class="row">
+            <input id="ac_location" class="input" placeholder="Location (e.g., NJ, USA)" />
+            <label class="toggle" title="Show as a seller">
+              <input type="checkbox" id="ac_is_seller" />
+              Seller account
+            </label>
+          </div>
+
+          <input id="ac_bio" class="input" placeholder="Short bio (optional)" />
+
+          <h3 style="margin:18px 0 8px 0;">Seller defaults</h3>
+          <p class="small" style="margin:0 0 10px 0;">Used to prefill new listings on the Sell page (optional).</p>
+
+          <div class="row">
+            <input id="ac_ship_stamped" class="input" placeholder="Default stamped shipping (USD)" value="0" />
+            <input id="ac_ship_tracked" class="input" placeholder="Default tracked shipping (USD)" value="0" />
+          </div>
+
+          <input id="ac_packaging" class="input" placeholder="Packaging notes (e.g., sleeve + toploader + team bag)" />
+
+          <button class="btn primary" type="submit">Save profile</button>
+          <div class="small" id="accountMsg"></div>
+        </form>
+      </div>
+
+      <aside class="panel card">
+        <h3 class="section-title">Account</h3>
+        <div class="small" id="acctEmail">—</div>
+        <div style="height:10px"></div>
+        <a class="btn" style="width:100%" href="dashboard.html">Go to Sell dashboard</a>
+      </aside>
+    </section>
+
+    <footer class="footer">© <span id="y"></span> K-Card Market</footer>
+  </div>
+
+  <script type="module" src="app.js"></script>
+  <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -405,12 +405,79 @@ async function renderAuthButton() {
       await renderAuthButton();
       await initDashboardFromSupabase();
       await initRequestsFromSupabase();
+      await initAccountFromSupabase();
     });
   } else {
     slot.innerHTML = `<a class="btn" href="login.html">Login</a>`;
   }
 }
 
+async function initAccountFromSupabase() {
+  const needs = document.getElementById("acctNeedsAuth");
+  const authed = document.getElementById("acctAuthed");
+  const form = document.getElementById("accountForm");
+  const msg = document.getElementById("accountMsg");
+  const emailEl = document.getElementById("acctEmail");
+  if (!needs || !authed || !form) return;
+
+  const { data } = await supabase.auth.getSession();
+  const user = data.session?.user;
+
+  if (!user) {
+    needs.style.display = "";
+    authed.style.display = "none";
+    return;
+  }
+
+  needs.style.display = "none";
+  authed.style.display = "";
+  if (emailEl) emailEl.textContent = `Signed in as ${user.email}`;
+
+  // Load profile row (should exist due to trigger; but we’ll be safe with upsert)
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  if (error) {
+    // If missing row, create it
+    await supabase.from("profiles").upsert({ id: user.id });
+  }
+
+  const p = profile || {};
+
+  document.getElementById("ac_display_name").value = p.display_name || "";
+  document.getElementById("ac_location").value = p.location || "";
+  document.getElementById("ac_is_seller").checked = !!p.is_seller;
+  document.getElementById("ac_bio").value = p.bio || "";
+  document.getElementById("ac_ship_stamped").value = (p.default_shipping_stamped ?? 0);
+  document.getElementById("ac_ship_tracked").value = (p.default_shipping_tracked ?? 0);
+  document.getElementById("ac_packaging").value = p.packaging_notes || "";
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (msg) msg.textContent = "Saving…";
+
+    const payload = {
+      id: user.id,
+      display_name: document.getElementById("ac_display_name").value.trim(),
+      location: document.getElementById("ac_location").value.trim(),
+      is_seller: document.getElementById("ac_is_seller").checked,
+      bio: document.getElementById("ac_bio").value.trim(),
+      default_shipping_stamped: Number(document.getElementById("ac_ship_stamped").value) || 0,
+      default_shipping_tracked: Number(document.getElementById("ac_ship_tracked").value) || 0,
+      packaging_notes: document.getElementById("ac_packaging").value.trim()
+    };
+
+    const { error } = await supabase.from("profiles").upsert(payload);
+    if (error) {
+      if (msg) msg.textContent = error.message;
+      return;
+    }
+    if (msg) msg.textContent = "Saved!";
+  });
+}
 
 
 /* =========================
@@ -956,6 +1023,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await renderAuthButton();
     await initDashboardFromSupabase();
     await initRequestsFromSupabase();
+    await initAccountFromSupabase();
   });
 
   // Local pages
@@ -967,4 +1035,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   await initItemFromSupabase();
   await initDashboardFromSupabase();
   await initRequestsFromSupabase();
+  await initAccountFromSupabase();
 });
