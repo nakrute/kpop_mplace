@@ -40,7 +40,7 @@ function renderHeader() {
 
       <div id="authCta">
         <a class="btn" href="checkout.html">Checkout</a>
-        <a class="btn primary" href="dashboard.html">List a card</a>
+        <a class="btn primary" href="dashboard.html">List</a>
       </div>
     </div>
   `;

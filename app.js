@@ -500,9 +500,7 @@ function updateMemberDropdown() {
 function applyBrowseFilters() {
   const searchEl = document.getElementById("searchInput");
   const groupEl = document.getElementById("groupFilter");
-  const eraEl = document.getElementById("eraFilter");
   const memberEl = document.getElementById("memberFilter");
-  const typeEl = document.getElementById("typeFilter");
   const sortEl = document.getElementById("sortFilter");
   const savedOnlyEl = document.getElementById("savedOnly");
   const noResultsEl = document.getElementById("noResults");
@@ -579,9 +577,7 @@ function applyBrowseFilters() {
 function initBrowseFilters() {
   const searchEl = document.getElementById("searchInput");
   const groupEl = document.getElementById("groupFilter");
-  const eraEl = document.getElementById("eraFilter");
   const memberEl = document.getElementById("memberFilter");
-  const typeEl = document.getElementById("typeFilter");
   const sortEl = document.getElementById("sortFilter");
   const clearBtn = document.getElementById("clearFiltersBtn");
   const savedOnlyEl = document.getElementById("savedOnly");
@@ -1013,7 +1009,6 @@ async function initBrowseFromSupabase() {
   const isBrowsePage =
     document.getElementById("searchInput") &&
     document.getElementById("groupFilter") &&
-    document.getElementById("typeFilter");
 
   if (!isBrowsePage) return;
 
