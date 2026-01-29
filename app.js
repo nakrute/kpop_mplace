@@ -945,55 +945,6 @@ async function initDashboardFromSupabase() {
 }
 
 /* =========================
-   Supabase: Requests page (Version B expects rq_era)
-========================= */
-async function initRequestsFromSupabase() {
-  const needs = document.getElementById("reqNeedsAuth");
-  const authed = document.getElementById("reqAuthed");
-  const form = document.getElementById("requestForm");
-  const msg = document.getElementById("requestMsg");
-
-  if (!needs || !authed || !form) return;
-
-  const { data } = await supabase.auth.getSession();
-  const user = data.session?.user;
-
-  if (!user) {
-    needs.style.display = "";
-    authed.style.display = "none";
-    return;
-  }
-
-  needs.style.display = "none";
-  authed.style.display = "";
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (msg) msg.textContent = "Submitting…";
-
-    const payload = {
-      user_id: user.id,
-      group_name: document.getElementById("rq_group").value.trim(),
-      era: (document.getElementById("rq_era")?.value || "").trim(),
-      member: (document.getElementById("rq_member")?.value || "").trim(),
-      card_type: (document.getElementById("rq_type")?.value || "").trim(),
-      store: (document.getElementById("rq_store")?.value || "").trim(),
-      round: (document.getElementById("rq_round")?.value || "").trim(),
-      notes: (document.getElementById("rq_notes")?.value || "").trim()
-    };
-
-    const { error } = await supabase.from("requests").insert(payload);
-    if (error) {
-      if (msg) msg.textContent = error.message;
-      return;
-    }
-
-    if (msg) msg.textContent = "Request submitted!";
-    form.reset();
-  });
-}
-
-/* =========================
    Boot
 ========================= */
 document.addEventListener("DOMContentLoaded", async () => {
@@ -1010,7 +961,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   await initBrowseFromSupabase();   // <-- ADD THIS (your new browse fetch)
   await initItemFromSupabase();
   await initDashboardFromSupabase();
-  await initRequestsFromSupabase();
   await initAccountFromSupabase();
 
   // 4) Local-only rendering + wiring that depends on rows existing
@@ -1024,7 +974,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Re-run page inits to reflect new session state
     await initDashboardFromSupabase();
-    await initRequestsFromSupabase();
     await initAccountFromSupabase();
 
     // Optional: if you want browse to update based on seller-only data later

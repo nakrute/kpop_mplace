@@ -26,7 +26,6 @@ function renderHeader() {
       <a data-nav href="index.html">Home</a>
       <a data-nav href="browse.html">Browse</a>
       <a data-nav href="saved.html">Saved</a>
-      <a data-nav href="request.html">Request</a>
       <a data-nav href="seller.html">Sellers</a>
       <a data-nav href="dashboard.html">Sell</a>
       <a data-nav href="about.html">About</a>
