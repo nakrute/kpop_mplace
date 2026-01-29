@@ -1005,7 +1005,7 @@ async function initBrowseFromSupabase() {
   // Grab active listings, then render unique cards with best price
   const { data: rows, error } = await supabase
     .from("listings")
-    .select("id, card_id, group_name, card_title, image_url, price, shipping_stamped, shipping_tracked, status, created_at")
+    .select("id, card_id, group_name, member, card_title, image_url, price, shipping_stamped, shipping_tracked, status, created_at")
     .eq("status", "active")
     .order("created_at", { ascending: false });
 
