@@ -508,13 +508,11 @@ function applyBrowseFilters() {
   const listEl = document.getElementById("browseList");
   const chipsEl = document.getElementById("activeChips");
 
-  if (!searchEl || !groupEl || !typeEl || !sortEl || !listEl) return;
+  if (!searchEl || !groupEl || !sortEl || !listEl) return;
 
   const query = norm(searchEl.value);
   const group = norm(groupEl.value);
-  const era = norm(eraEl ? eraEl.value : "");
   const member = norm(memberEl ? memberEl.value : "");
-  const type = norm(typeEl.value);
   const sort = sortEl.value;
   const savedOnly = !!(savedOnlyEl && savedOnlyEl.checked);
 
@@ -565,9 +563,7 @@ function applyBrowseFilters() {
   if (chipsEl) {
     const chips = [];
     if (group) chips.push(`Group: ${groupEl.options[groupEl.selectedIndex].text}`);
-    if (eraEl && era) chips.push(`Era: ${eraEl.options[eraEl.selectedIndex].text}`);
     if (memberEl && member) chips.push(`Member: ${memberEl.options[memberEl.selectedIndex].text}`);
-    if (type) chips.push(`Type: ${typeEl.options[typeEl.selectedIndex].text}`);
     if (query) chips.push(`Search: "${searchEl.value.trim()}"`);
     if (savedOnly) chips.push("Saved only");
     chipsEl.innerHTML = chips.map((c) => `<span class="chip">${escapeHtml(c)}</span>`).join("");
@@ -582,7 +578,7 @@ function initBrowseFilters() {
   const clearBtn = document.getElementById("clearFiltersBtn");
   const savedOnlyEl = document.getElementById("savedOnly");
 
-  if (!(searchEl && groupEl && typeEl && sortEl)) return;
+  if (!(searchEl && groupEl && sortEl)) return;
 
   if (memberEl) {
     updateMemberDropdown();
@@ -596,8 +592,6 @@ function initBrowseFilters() {
   }
 
   searchEl.addEventListener("input", applyBrowseFilters);
-  if (eraEl) eraEl.addEventListener("change", applyBrowseFilters);
-  typeEl.addEventListener("change", applyBrowseFilters);
   sortEl.addEventListener("change", applyBrowseFilters);
   if (savedOnlyEl) savedOnlyEl.addEventListener("change", applyBrowseFilters);
 
@@ -605,9 +599,7 @@ function initBrowseFilters() {
     clearBtn.addEventListener("click", () => {
       searchEl.value = "";
       groupEl.value = "";
-      if (eraEl) eraEl.value = "";
       if (memberEl) memberEl.value = "";
-      typeEl.value = "";
       sortEl.value = "";
       if (savedOnlyEl) savedOnlyEl.checked = false;
       if (memberEl) updateMemberDropdown();
@@ -1008,7 +1000,7 @@ async function initBrowseFromSupabase() {
   // If we're not on browse.html, bail
   const isBrowsePage =
     document.getElementById("searchInput") &&
-    document.getElementById("groupFilter") &&
+    document.getElementById("groupFilter");
 
   if (!isBrowsePage) return;
 
