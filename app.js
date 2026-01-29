@@ -997,31 +997,39 @@ async function initRequestsFromSupabase() {
    Boot
 ========================= */
 document.addEventListener("DOMContentLoaded", async () => {
-  // Cart
+  // 1) UI that should exist everywhere
   ensureCartUI();
   updateCartCountUI();
   initAddToCartButtons();
 
-  // Auth CTA
+  // 2) Auth button first (so header looks right ASAP)
   await renderAuthButton();
-  supabase.auth.onAuthStateChange(async () => {
-    await renderAuthButton();
-    await initDashboardFromSupabase();
-    await initRequestsFromSupabase();
-    await initAccountFromSupabase();
-  });
 
-  // Local pages
-  renderSavedPage();
-  initBrowseFilters();
-  initRowSaveButtons();
-
-  // Supabase pages
+  // 3) Supabase data loads that create DOM content (order matters)
+  //    - Browse must render rows BEFORE filters/save buttons attach
+  await initBrowseFromSupabase();   // <-- ADD THIS (your new browse fetch)
   await initItemFromSupabase();
   await initDashboardFromSupabase();
   await initRequestsFromSupabase();
   await initAccountFromSupabase();
 
+  // 4) Local-only rendering + wiring that depends on rows existing
+  renderSavedPage();
+  initRowSaveButtons();             // after browse rows exist
+  initBrowseFilters();              // after browse rows exist
+
+  // 5) Auth state changes: update auth button + re-init pages (safe; they bail if not on that page)
+  supabase.auth.onAuthStateChange(async () => {
+    await renderAuthButton();
+
+    // Re-run page inits to reflect new session state
+    await initDashboardFromSupabase();
+    await initRequestsFromSupabase();
+    await initAccountFromSupabase();
+
+    // Optional: if you want browse to update based on seller-only data later
+    // await initBrowseFromSupabase();
+  });
 });
 
 async function doLogout() {
@@ -1046,3 +1054,106 @@ document.addEventListener("click", async (e) => {
   e.preventDefault();
   await doLogout();
 });
+
+async function initBrowseFromSupabase() {
+  const listEl = document.getElementById("browseList");
+  const countEl = document.getElementById("resultsCount");
+  if (!listEl) return;
+
+  // If we're not on browse.html, bail
+  const isBrowsePage =
+    document.getElementById("searchInput") &&
+    document.getElementById("groupFilter") &&
+    document.getElementById("typeFilter");
+
+  if (!isBrowsePage) return;
+
+  listEl.innerHTML = `<div class="panel card"><div class="small">Loading listings…</div></div>`;
+
+  // Grab active listings, then render unique cards with best price
+  const { data: rows, error } = await supabase
+    .from("listings")
+    .select("id, card_id, group_name, card_title, image_url, price, shipping_stamped, shipping_tracked, status, created_at")
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    listEl.innerHTML = `<div class="panel card"><div class="cart-empty">Could not load listings: ${escapeHtml(error.message)}</div></div>`;
+    if (countEl) countEl.textContent = "Showing 0";
+    return;
+  }
+
+  if (!rows || rows.length === 0) {
+    listEl.innerHTML = `<div class="panel card"><div class="cart-empty">No listings yet. Be the first to list a card!</div></div>`;
+    if (countEl) countEl.textContent = "Showing 0";
+    return;
+  }
+
+  // Group by card_id and compute a "from price"
+  const byCard = new Map();
+  for (const r of rows) {
+    const key = r.card_id;
+    const shipBest = Math.min(Number(r.shipping_stamped) || 0, Number(r.shipping_tracked) || 0);
+    const total = (Number(r.price) || 0) + (Number.isFinite(shipBest) ? shipBest : 0);
+
+    const existing = byCard.get(key);
+    if (!existing) {
+      byCard.set(key, {
+        card_id: r.card_id,
+        group_name: r.group_name || "Unknown",
+        title: r.card_title || r.card_id,
+        image_url: r.image_url || "",
+        bestTotal: total,
+        bestPrice: Number(r.price) || 0,
+        created_at: r.created_at
+      });
+    } else {
+      // keep the best total price
+      if (total < existing.bestTotal) {
+        existing.bestTotal = total;
+        existing.bestPrice = Number(r.price) || 0;
+      }
+    }
+  }
+
+  const cards = Array.from(byCard.values());
+
+  listEl.innerHTML = "";
+  for (const c of cards) {
+    const row = document.createElement("div");
+    row.className = "panel rowitem";
+    row.dataset.id = c.card_id;
+    row.dataset.group = c.group_name;
+    row.dataset.era = "";       // optional for now
+    row.dataset.member = "";    // optional for now
+    row.dataset.type = "";      // optional for now
+    row.dataset.price = String(c.bestTotal);
+    row.dataset.date = c.created_at || "";
+
+    const href = `item.html?id=${encodeURIComponent(c.card_id)}`;
+
+    row.innerHTML = `
+      <a class="left" href="${escapeHtml(href)}">
+        ${c.image_url ? `<img class="thumbimg" src="${escapeHtml(c.image_url)}" alt="thumb" />` : `<div class="thumb"></div>`}
+        <div>
+          <div class="title">${escapeHtml(c.title)}</div>
+          <div class="meta">${escapeHtml(c.group_name)} · from $${money(c.bestTotal)}</div>
+        </div>
+      </a>
+      <div class="row-right">
+        <button class="heart" type="button" aria-label="Save item" data-save-btn>♡</button>
+        <a class="btn primary" href="${escapeHtml(href)}">View</a>
+      </div>
+    `;
+
+    // Needed for wishlist saving
+    row.dataset.title = c.title;
+    row.dataset.href = href;
+    row.dataset.img = c.image_url || "";
+
+    listEl.appendChild(row);
+  }
+
+  if (countEl) countEl.textContent = `Showing ${cards.length}`;
+}
+
