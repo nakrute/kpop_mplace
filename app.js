@@ -521,23 +521,19 @@ function applyBrowseFilters() {
   const visible = [];
   for (const item of items) {
     const itemGroup = norm(item.dataset.group);
-    const itemEra = norm(item.dataset.era);
     const itemMember = norm(item.dataset.member);
-    const itemType = norm(item.dataset.type);
     const itemText = norm(item.dataset.tags || item.textContent);
     const id = item.dataset.id;
 
     const matchesGroup = !group || itemGroup.includes(group);
-    const matchesEra = !era || itemEra.includes(era);
     const matchesMember = !member || itemMember.includes(member);
-    const matchesType = !type || itemType.includes(type);
 
     const qParts = query ? query.split(" ") : [];
     const matchesQuery = !query || qParts.every((p) => itemText.includes(p));
 
     const matchesSaved = !savedOnly || isSaved(id);
 
-    const show = matchesGroup && matchesEra && matchesMember && matchesType && matchesQuery && matchesSaved;
+    const show = matchesGroup && matchesMember && matchesQuery && matchesSaved;
     item.style.display = show ? "" : "none";
     if (show) visible.push(item);
   }
@@ -556,7 +552,7 @@ function applyBrowseFilters() {
   if (noResultsEl) noResultsEl.style.display = visible.length === 0 ? "" : "none";
 
   if (resultsCountEl) {
-    if (!query && !group && !era && !member && !type && !savedOnly) resultsCountEl.textContent = "Showing all results";
+    if (!query && !group && !member && !savedOnly) resultsCountEl.textContent = "Showing all results";
     else resultsCountEl.textContent = `Showing ${visible.length}`;
   }
 
