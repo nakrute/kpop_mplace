@@ -911,6 +911,11 @@ async function initDashboardFromSupabase() {
     const shipping_stamped = Number(document.getElementById("ls_ship_stamped").value) || 0;
     const shipping_tracked = Number(document.getElementById("ls_ship_tracked").value) || 0;
 
+    // NEW fields used by your trigger
+    const group_name = document.getElementById("ls_group_name").value.trim();
+    const card_title = document.getElementById("ls_card_title").value.trim();
+    const image_url = document.getElementById("ls_image_url").value.trim();
+
     const { error } = await supabase.from("listings").insert({
       card_id,
       seller_id: user.id,
@@ -918,7 +923,12 @@ async function initDashboardFromSupabase() {
       price,
       shipping_stamped,
       shipping_tracked,
-      status: "active"
+      status: "active",
+
+      // IMPORTANT: ensure_card_exists() uses these
+      group_name,
+      card_title: card_title || null,
+      image_url: image_url || null
     });
 
     if (error) {

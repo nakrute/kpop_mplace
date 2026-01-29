@@ -33,13 +33,17 @@
               <option value="Good">Condition: Good</option>
               <option value="Damaged">Condition: Damaged</option>
             </select>
-            <input id="ls_price" class="input" placeholder="Item price (USD)" required />
+              <input id="ls_price" class="input" type="number" step="0.01" min="0" placeholder="Item price (USD)" required />
           </div>
 
           <div class="row">
-            <input id="ls_ship_stamped" class="input" placeholder="Stamped shipping (USD)" required />
-            <input id="ls_ship_tracked" class="input" placeholder="Tracked shipping (USD)" required />
+            <input id="ls_ship_stamped" class="input" type="number" step="0.01" min="0" placeholder="Stamped shipping (USD)" required />
+            <input id="ls_ship_tracked" class="input" type="number" step="0.01" min="0" placeholder="Tracked shipping (USD)" required />
           </div>
+
+          <input id="ls_group_name" class="input" placeholder="Group (e.g., SEVENTEEN)" required />
+          <input id="ls_card_title" class="input" placeholder="Title (optional — shown on item page)" />
+          <input id="ls_image_url" class="input" placeholder="Image URL (optional)" />
 
           <button class="btn primary" type="submit">Publish listing</button>
           <div class="small" id="listingMsg"></div>
