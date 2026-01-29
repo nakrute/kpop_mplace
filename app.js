@@ -899,6 +899,7 @@ async function initDashboardFromSupabase() {
     const group_name = document.getElementById("ls_group_name").value.trim();
     const card_title = document.getElementById("ls_card_title").value.trim();
     const image_url = document.getElementById("ls_image_url").value.trim();
+    const member = document.getElementById("ls_member").value.trim();
 
     const { error } = await supabase.from("listings").insert({
       card_id,
@@ -908,9 +909,8 @@ async function initDashboardFromSupabase() {
       shipping_stamped,
       shipping_tracked,
       status: "active",
-
-      // IMPORTANT: ensure_card_exists() uses these
       group_name,
+      member: member || null,
       card_title: card_title || null,
       image_url: image_url || null
     });
@@ -1035,6 +1035,7 @@ async function initBrowseFromSupabase() {
         group_name: r.group_name || "Unknown",
         title: r.card_title || r.card_id,
         image_url: r.image_url || "",
+        member: r.member || "",
         bestTotal: total,
         bestPrice: Number(r.price) || 0,
         created_at: r.created_at
@@ -1054,22 +1055,33 @@ async function initBrowseFromSupabase() {
   for (const c of cards) {
     const row = document.createElement("div");
     row.className = "panel rowitem";
+
+    // These power filtering + sorting
     row.dataset.id = c.card_id;
-    row.dataset.group = c.group_name;
-    row.dataset.era = "";       // optional for now
-    row.dataset.member = "";    // optional for now
-    row.dataset.type = "";      // optional for now
+    row.dataset.group = c.group_name || "";
+    row.dataset.member = c.member || "";
     row.dataset.price = String(c.bestTotal);
     row.dataset.date = c.created_at || "";
+
+    // This powers search
+    row.dataset.tags = `${c.title} ${c.group_name} ${c.member}`.toLowerCase();
 
     const href = `item.html?id=${encodeURIComponent(c.card_id)}`;
 
     row.innerHTML = `
       <a class="left" href="${escapeHtml(href)}">
-        ${c.image_url ? `<img class="thumbimg" src="${escapeHtml(c.image_url)}" alt="thumb" />` : `<div class="thumb"></div>`}
+        ${
+          c.image_url
+            ? `<img class="thumbimg" src="${escapeHtml(c.image_url)}" alt="thumb" />`
+            : `<div class="thumb"></div>`
+        }
         <div>
           <div class="title">${escapeHtml(c.title)}</div>
-          <div class="meta">${escapeHtml(c.group_name)} · from $${money(c.bestTotal)}</div>
+          <div class="meta">
+            ${escapeHtml(c.group_name)}
+            ${c.member ? " · " + escapeHtml(c.member) : ""}
+            · from $${money(c.bestTotal)}
+          </div>
         </div>
       </a>
       <div class="row-right">
@@ -1085,7 +1097,6 @@ async function initBrowseFromSupabase() {
 
     listEl.appendChild(row);
   }
-
   if (countEl) countEl.textContent = `Showing ${cards.length}`;
 }
 
