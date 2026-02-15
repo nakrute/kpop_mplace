@@ -1,0 +1,176 @@
+# K-Card Market
+
+A lightweight marketplace for buying and selling K-pop photocards, built with **GitHub Pages (static frontend)** and **Supabase (Auth + Database)**.
+
+---
+
+## Overview
+
+K-Card Market allows users to:
+
+* Create accounts and log in (Supabase Auth)
+* List photocards for sale (no catalog approval required)
+* Browse listings grouped by card
+* View item pages showing all active listings
+* Save items to a wishlist
+* Use a demo cart (checkout integration planned)
+
+The site is designed to be simple, fast, and fully static-hosted while using Supabase for backend functionality.
+
+---
+
+## Tech Stack
+
+**Frontend**
+
+* HTML / CSS / Vanilla JavaScript
+* GitHub Pages hosting
+* Module-based JS (`app.js`, `header.js`)
+
+**Backend**
+
+* Supabase Auth
+* Supabase Postgres database
+* Row Level Security (RLS)
+
+---
+
+## Project Structure
+
+```
+/kpop_mplace
+  index.html
+  browse.html
+  item.html
+  dashboard.html
+  account.html
+  login.html
+  saved.html
+  styles.css
+  header.js
+  app.js
+  supabaseClient.js
+```
+
+---
+
+## Key Features
+
+### Authentication
+
+* Login / logout handled via Supabase Auth
+* Header dynamically displays Login or Logout
+* Seller and account pages require authentication
+
+### Listings (List Anything Flow)
+
+Users can list **any card**, even if it does not yet exist in the catalog.
+
+A database trigger automatically creates a matching card entry when a new listing is inserted.
+
+### Browse Page
+
+* Loads active listings from Supabase
+* Groups listings by `card_id`
+* Displays “From $X” price based on lowest listing total
+* Client-side search and filters
+
+### Item Page
+
+* Displays card information
+* Shows all active listings for that card
+* Allows adding listings to the demo cart
+
+### Wishlist
+
+* Stored in localStorage
+* Saved items page displays saved entries
+
+### Demo Cart
+
+* localStorage-based cart drawer
+* Quantity controls and shipping selection
+* Checkout integration planned later
+
+---
+
+## Database Schema (Core Tables)
+
+### cards
+
+Stores the canonical card record used for routing and grouping.
+
+```sql
+create table public.cards (
+  id text primary key,
+  group_name text not null,
+  era text null,
+  member text null,
+  card_type text null,
+  title text null,
+  image_url text null,
+  is_verified boolean not null default false,
+  created_by uuid null references auth.users(id),
+  created_at timestamptz not null default now()
+);
+```
+
+### listings
+
+Stores marketplace listings.
+
+```sql
+create table public.listings (
+  id uuid primary key default gen_random_uuid(),
+  card_id text not null references public.cards(id) on delete cascade,
+  seller_id uuid not null references auth.users(id) on delete cascade,
+  condition text not null,
+  price numeric(10,2) not null,
+  shipping_stamped numeric(10,2) not null default 0,
+  shipping_tracked numeric(10,2) not null default 0,
+  status text not null default 'active',
+  created_at timestamptz not null default now(),
+  group_name text null,
+  card_title text null,
+  image_url text null
+);
+```
+
+---
+
+## Boot Flow (Frontend)
+
+On page load:
+
+1. Header renders immediately
+2. Cart UI initializes
+3. Auth button renders
+4. Supabase data loads (browse, item, dashboard, account)
+5. Wishlist and filters attach after DOM rows are rendered
+6. Auth state changes refresh relevant UI
+
+---
+
+## Development Notes
+
+* Static hosting means **all dynamic content must be loaded via JavaScript**
+* Browse search/filtering is **client-side**
+* Listings are the **source of truth** for marketplace data
+* Cards table acts as a lightweight catalog for grouping and routing
+
+---
+
+## Planned Improvements
+
+* Member field support in listings and browse filters
+* Seller profile pages
+* Real checkout / payment integration
+* Image upload support
+* Reputation / rating system
+* Messaging between buyers and sellers
+
+---
+
+## License
+
+Personal project — all rights reserved.

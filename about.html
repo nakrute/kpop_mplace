@@ -13,38 +13,37 @@
     <section class="panel card" style="margin-top:18px">
       <h2 style="margin:0 0 8px 0">About K-Card Market</h2>
       <p class="small" style="margin:0">
-        K-Card Market is a demo marketplace concept for buying/selling K-pop photocards
-        with a TCGplayer-style browsing experience. This site currently uses localStorage
-        for wishlist, cart, and demo orders.
+        K-Card Market is a marketplace concept for buying/selling K-pop photocards.
       </p>
 
       <div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px;">
         <div class="card">
-          <h3>What’s working now</h3>
+          <h3>The Goal</h3>
           <p class="small">
-            Browse + filters + sorting, wishlist, cart drawer, checkout demo, and a seller dashboard demo.
+            To be able to allow for people from all over to buy and collect their favorite KPop photocards.
           </p>
         </div>
         <div class="card">
           <h3>What’s next</h3>
           <p class="small">
-            Supabase Auth, catalog + listings tables, seller profiles, real images, and real checkout via Stripe.
+             Checkout via Stripe.
           </p>
         </div>
       </div>
 
+      <!--
       <div class="chips" style="margin-top:12px;">
         <span class="chip">Demo</span>
         <span class="chip">GitHub Pages</span>
         <span class="chip">LocalStorage</span>
       </div>
+      -->
+      
     </section>
 
     <footer class="footer">© <span id="y"></span> K-Card Market</footer>
   </div>
-
-  <script type="module" src="header.js"></script>
-  <script type="module" src="app.js"></script>
-  <script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+<script>document.getElementById("y").textContent = new Date().getFullYear();</script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
