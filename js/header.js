@@ -1,5 +1,10 @@
-// js/header.js — module version (no globals, no inline onclick)
-// Renders instantly and keeps original markup/classes so the site looks the same.
+// header.js — no imports (renders instantly)
+
+function toggleMenu() {
+  const nav = document.querySelector(".nav");
+  if (nav) nav.classList.toggle("open");
+}
+window.toggleMenu = toggleMenu;
 
 function renderHeader() {
   const el = document.getElementById("siteHeader");
@@ -15,13 +20,12 @@ function renderHeader() {
       </div>
     </div>
 
-    <button class="hamburger" id="navHamburger" type="button">Menu</button>
+    <button class="hamburger" type="button" onclick="toggleMenu()">Menu</button>
 
-    <nav class="navlinks" id="navLinks">
+    <nav class="navlinks">
       <a data-nav href="index.html">Home</a>
       <a data-nav href="browse.html">Browse</a>
       <a data-nav href="saved.html">Saved</a>
-      <a data-nav href="seller.html">Sellers</a>
       <a data-nav href="dashboard.html">Sell</a>
       <a data-nav href="about.html">About</a>
       <a data-nav href="account.html">Account</a>
@@ -29,7 +33,7 @@ function renderHeader() {
 
     <div class="nav-cta">
       <div id="authBtnSlot">
-        <!-- js/app.js will fill Login/Logout -->
+        <!-- app.js will fill Login/Logout -->
         <a class="btn" href="login.html">Login</a>
       </div>
 
@@ -48,15 +52,14 @@ function markActiveNav() {
   });
 }
 
-function wireHamburger() {
-  const nav = document.querySelector(".nav");
-  const btn = document.getElementById("navHamburger");
-  if (!nav || !btn) return;
-  btn.addEventListener("click", () => nav.classList.toggle("open"));
-}
-
-export function initHeader() {
+document.addEventListener("DOMContentLoaded", () => {
   renderHeader();
   markActiveNav();
-  wireHamburger();
+});
+
+
+// ES module entry
+export function initHeader(){
+  try { renderHeader(); } catch(e){ console.error(e); }
 }
+window.initHeader = initHeader;

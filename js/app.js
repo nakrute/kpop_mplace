@@ -30,26 +30,6 @@ function escapeHtml(s) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-
-function sanitizeUrl(url, { allowDataImages = false } = {}) {
-  // Prevent javascript: and other dangerous schemes in href/src.
-  const s = String(url ?? "").trim();
-  if (!s) return "";
-  const lower = s.toLowerCase();
-
-  // Block javascript:, vbscript:
-  if (lower.startsWith("javascript:") || lower.startsWith("vbscript:")) return "";
-  // Block data: by default (can enable for images if you explicitly want it)
-  if (lower.startsWith("data:")) {
-    if (allowDataImages && lower.startsWith("data:image/")) return s;
-    return "";
-  }
-  // Allow http(s)
-  if (lower.startsWith("http://") || lower.startsWith("https://")) return s;
-  // Allow relative URLs (no scheme). Also block protocol-relative //evil.com
-  if (lower.startsWith("//")) return "";
-  return s;
-}
 function getQueryParam(name) {
   const u = new URL(location.href);
   return u.searchParams.get(name);
@@ -149,8 +129,8 @@ function renderSavedPage() {
     const row = document.createElement("div");
     row.className = "panel rowitem";
     row.innerHTML = `
-      <a class="left" href="${escapeHtml(sanitizeUrl(it.href || "browse.html"))}">
-        ${it.img ? `<img class="thumbimg" src="${escapeHtml(sanitizeUrl(it.img, { allowDataImages: false }))}" alt="thumb" />` : `<div class="thumb"></div>`}
+      <a class="left" href="${escapeHtml(it.href || "browse.html")}">
+        ${it.img ? `<img class="thumbimg" src="${escapeHtml(it.img)}" alt="thumb" />` : `<div class="thumb"></div>`}
         <div>
           <div class="title">${escapeHtml(it.title || "Saved item")}</div>
           <div class="meta">${escapeHtml([it.group, it.type].filter(Boolean).join(" · "))}</div>
@@ -158,7 +138,7 @@ function renderSavedPage() {
       </a>
       <div class="row-right">
         <button class="heart saved" type="button" aria-label="Remove from saved">♥</button>
-        <a class="btn primary" href="${escapeHtml(sanitizeUrl(it.href || "browse.html"))}">View</a>
+        <a class="btn primary" href="${escapeHtml(it.href || "browse.html")}">View</a>
       </div>
     `;
 
@@ -948,6 +928,110 @@ async function initDashboardFromSupabase() {
   await loadMyListings();
 }
 
+
+/* =========================
+   Login Page (Supabase Auth)
+========================= */
+async function initLoginFromSupabase() {
+  const form = document.getElementById("loginForm");
+  const emailEl = document.getElementById("li_email");
+  const passEl = document.getElementById("li_password");
+  const msgEl = document.getElementById("loginMsg");
+  const magicBtn = document.getElementById("magicLinkBtn");
+
+  const signupForm = document.getElementById("signupForm");
+  const suEmail = document.getElementById("su_email");
+  const suPass = document.getElementById("su_password");
+  const suMsg = document.getElementById("signupMsg");
+
+  // Bail if not on login page
+  if (!form && !signupForm) return;
+
+  // If already logged in, bounce to browse
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (data?.session?.user) {
+      window.location.href = "browse.html";
+      return;
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = (emailEl?.value || "").trim();
+      const password = passEl?.value || "";
+      if (!email) return;
+
+      if (msgEl) msgEl.textContent = "Signing in…";
+
+      try {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          if (msgEl) msgEl.textContent = error.message;
+          return;
+        }
+        window.location.href = "browse.html";
+      } catch (err) {
+        console.error(err);
+        if (msgEl) msgEl.textContent = "Sign in failed.";
+      }
+    });
+  }
+
+  if (magicBtn) {
+    magicBtn.addEventListener("click", async () => {
+      const email = (emailEl?.value || "").trim();
+      if (!email) {
+        if (msgEl) msgEl.textContent = "Enter your email first.";
+        return;
+      }
+      if (msgEl) msgEl.textContent = "Sending magic link…";
+
+      try {
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: { emailRedirectTo: window.location.origin + window.location.pathname.replace(/\/[^/]*$/, "/") + "index.html" }
+        });
+        if (error) {
+          if (msgEl) msgEl.textContent = error.message;
+          return;
+        }
+        if (msgEl) msgEl.textContent = "Check your email for the magic link.";
+      } catch (err) {
+        console.error(err);
+        if (msgEl) msgEl.textContent = "Could not send magic link.";
+      }
+    });
+  }
+
+  if (signupForm) {
+    signupForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = (suEmail?.value || "").trim();
+      const password = suPass?.value || "";
+      if (!email || !password) return;
+
+      if (suMsg) suMsg.textContent = "Creating account…";
+
+      try {
+        const { error } = await supabase.auth.signUp({ email, password });
+        if (error) {
+          if (suMsg) suMsg.textContent = error.message;
+          return;
+        }
+        if (suMsg) suMsg.textContent = "Account created. Check email to confirm (if enabled), then sign in.";
+      } catch (err) {
+        console.error(err);
+        if (suMsg) suMsg.textContent = "Sign up failed.";
+      }
+    });
+  }
+}
+
+
 /* =========================
    Boot
 ========================= */
@@ -959,6 +1043,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // 2) Auth button first (so header looks right ASAP)
   await renderAuthButton();
+  await initLoginFromSupabase();
 
   // 3) Supabase data loads that create DOM content (order matters)
   //    - Browse must render rows BEFORE filters/save buttons attach
@@ -975,6 +1060,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 5) Auth state changes: update auth button + re-init pages (safe; they bail if not on that page)
   supabase.auth.onAuthStateChange(async () => {
     await renderAuthButton();
+  await initLoginFromSupabase();
 
     // Re-run page inits to reflect new session state
     await initDashboardFromSupabase();
@@ -1045,13 +1131,8 @@ async function initBrowseFromSupabase() {
   const byCard = new Map();
   for (const r of rows) {
     const key = r.card_id;
-    const stamped = Number(r.shipping_stamped);
-const tracked = Number(r.shipping_tracked);
-const a = Number.isFinite(stamped) && stamped > 0 ? stamped : Infinity;
-const b = Number.isFinite(tracked) && tracked > 0 ? tracked : Infinity;
-const shipBest = Math.min(a, b);
-const ship = Number.isFinite(shipBest) ? shipBest : 0;
-const total = (Number(r.price) || 0) + ship;
+    const shipBest = Math.min(Number(r.shipping_stamped) || 0, Number(r.shipping_tracked) || 0);
+    const total = (Number(r.price) || 0) + (Number.isFinite(shipBest) ? shipBest : 0);
 
     const existing = byCard.get(key);
     if (!existing) {
@@ -1094,10 +1175,10 @@ const total = (Number(r.price) || 0) + ship;
     const href = `item.html?id=${encodeURIComponent(c.card_id)}`;
 
     row.innerHTML = `
-      <a class="left" href="${escapeHtml(sanitizeUrl(href))}">
+      <a class="left" href="${escapeHtml(href)}">
         ${
           c.image_url
-            ? `<img class="thumbimg" src="${escapeHtml(sanitizeUrl(c.image_url, { allowDataImages: false }))}" alt="thumb" />`
+            ? `<img class="thumbimg" src="${escapeHtml(c.image_url)}" alt="thumb" />`
             : `<div class="thumb"></div>`
         }
         <div>
@@ -1111,7 +1192,7 @@ const total = (Number(r.price) || 0) + ship;
       </a>
       <div class="row-right">
         <button class="heart" type="button" aria-label="Save item" data-save-btn>♡</button>
-        <a class="btn primary" href="${escapeHtml(sanitizeUrl(href))}">View</a>
+        <a class="btn primary" href="${escapeHtml(href)}">View</a>
       </div>
     `;
 
