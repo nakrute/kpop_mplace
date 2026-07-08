@@ -3,42 +3,46 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Browse · K-Card Market</title>
+  <title>Browse - K-Card Market</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="container">
     <header id="siteHeader"></header>
 
+    <section class="page-head">
+      <span class="eyebrow">Marketplace</span>
+      <h1>Browse photocards</h1>
+      <p>Search active listings by band, card title, album, or era.</p>
+    </section>
+
     <section class="panel toolbar">
       <div class="filters">
-        <input id="searchInput" class="input" placeholder="Search…" aria-label="Search"/>
-        <input id="groupFilter" class="input" placeholder="Group name..." aria-label="Group filter"/>
-        <input id="memberFilter" class="input" placeholder="Member name..." aria-label="Member filter"/>
+        <input id="searchInput" class="input" placeholder="Search band, card, or era..." aria-label="Search listings" />
+        <select id="groupFilter" aria-label="Band filter"></select>
 
         <select id="sortFilter" aria-label="Sort">
           <option value="">Sort by</option>
-          <option value="price-asc">Price: Low → High</option>
-          <option value="price-desc">Price: High → Low</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
           <option value="newest">Newest</option>
         </select>
 
         <button id="clearFiltersBtn" class="btn" type="button">Clear</button>
       </div>
 
-      <div id="resultsCount" class="small">Showing 0</div>
+      <div id="resultsCount" class="small">Showing 0 listings</div>
     </section>
 
-    <section id="noResults" class="panel card" style="margin-top:14px; display:none;">
-      <h3 style="margin:0 0 6px 0;">No matches</h3>
-      <p class="small" style="margin:0;">Try clearing filters or searching a broader term.</p>
+    <section id="noResults" class="panel card section-gap-sm" hidden>
+      <h3>No matches</h3>
+      <p class="small flush">Try clearing filters or searching a broader term.</p>
     </section>
 
     <section id="browseList" class="list"></section>
 
-    <footer class="footer">© <span id="y"></span> K-Card Market</footer>
+    <footer class="footer">&copy; <span data-current-year></span> K-Card Market</footer>
   </div>
-<script>document.getElementById("y").textContent = new Date().getFullYear();</script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

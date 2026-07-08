@@ -1,0 +1,9 @@
+{
+  "name": "k-card-market",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.cjs"
+  }
+}

@@ -1,20 +1,9 @@
-export const qs = (sel, root = document) => root.querySelector(sel);
-export const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+export const qs = (selector, root = document) => root.querySelector(selector);
 
-export function getParam(name) {
-  const url = new URL(window.location.href);
-  return url.searchParams.get(name);
-}
+export const qsa = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
-export function formatMoney(n) {
-  const num = Number(n);
-  if (!Number.isFinite(num)) return "$0.00";
-  return `$${num.toFixed(2)}`;
-}
-
-export function escapeHtml(str) {
-  const s = String(str ?? "");
-  return s
+export function escapeHtml(value) {
+  return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -22,10 +11,14 @@ export function escapeHtml(str) {
     .replaceAll("'", "&#39;");
 }
 
-export function debounce(fn, wait = 200) {
-  let t = null;
-  return (...args) => {
-    window.clearTimeout(t);
-    t = window.setTimeout(() => fn(...args), wait);
-  };
+export function money(value) {
+  return `$${(Number(value) || 0).toFixed(2)}`;
+}
+
+export function normalize(value) {
+  return String(value ?? "").toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+export function createId(prefix) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }

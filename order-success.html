@@ -3,18 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Order placed · K-Card Market</title>
+  <title>Order placed - K-Card Market</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="container">
     <header id="siteHeader"></header>
 
-    <section class="panel card" style="margin-top:18px" id="orderSuccess"></section>
+    <section class="panel card success-card" id="orderSuccess">
+      <span class="eyebrow">Order complete</span>
+      <h1>Thanks for your order.</h1>
+      <p class="small">This was a demo checkout, so no payment was processed.</p>
+      <a class="btn primary" href="browse.html">Continue browsing</a>
+    </section>
 
-    <footer class="footer">© <span id="y"></span> K-Card Market</footer>
+    <footer class="footer">&copy; <span data-current-year></span> K-Card Market</footer>
   </div>
-<script>document.getElementById("y").textContent = new Date().getFullYear();</script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

@@ -3,45 +3,41 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Item · K-Card Market</title>
+  <title>Item - K-Card Market</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="container">
     <header id="siteHeader"></header>
 
-    <section class="two-col" style="margin-top:18px;">
+    <section class="two-col">
       <div class="panel card">
-        <div id="itemHeaderLoading" class="small">Loading card…</div>
+        <div id="itemHeaderLoading" class="small">Loading card...</div>
 
-        <div id="itemHeader" style="display:none;">
-          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-            <div style="display:flex; gap:12px; align-items:flex-start;">
-              <img id="itemImage" class="thumbimg" alt="thumb"
-                   style="width:72px;height:72px;border-radius:18px;"
-                   src="https://placehold.co/256x256/png?text=Card" />
+        <div id="itemHeader" hidden>
+          <div class="item-heading">
+            <div class="item-identity">
+              <img id="itemImage" class="item-image" alt="Photocard" src="assets/photocard-hero.png" />
               <div>
                 <div class="badge" id="itemBadge">Catalog</div>
-                <h2 id="itemTitle" style="margin:10px 0 8px 0;">—</h2>
-                <p class="small" id="itemMetaLine" style="margin:0;">—</p>
+                <h2 id="itemTitle">Listing</h2>
+                <p class="small flush" id="itemMetaLine"></p>
               </div>
             </div>
-
-            <button class="heart" type="button" aria-label="Save item" id="itemSaveBtn">♡</button>
           </div>
 
-          <div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px;">
+          <div class="grid item-stats">
             <div class="card">
               <h3>Price stats (live)</h3>
-              <p class="small" id="itemStats">—</p>
+              <p class="small" id="itemStats"></p>
             </div>
             <div class="card">
               <h3>Card attributes</h3>
-              <p class="small" id="itemAttrs" style="margin:0;">—</p>
+              <p class="small flush" id="itemAttrs"></p>
             </div>
           </div>
 
-          <div class="chips" style="margin-top:12px;">
+          <div class="chips section-gap-sm">
             <span class="chip">Report listing (demo)</span>
             <span class="chip">Verify entry (demo)</span>
           </div>
@@ -50,19 +46,17 @@
 
       <aside class="panel card">
         <h3 class="section-title">Quick actions</h3>
-        <a class="btn" style="width:100%" href="browse.html">Back to browse</a>
-        <div style="height:10px"></div>
-        <a class="btn primary" style="width:100%" href="dashboard.html">Create a listing</a>
-        <p class="small" style="margin-top:12px;">Tip: tap 🛒 to view your cart anytime.</p>
+        <a class="btn full-width" href="browse.html">Back to browse</a>
+        <a class="btn primary full-width section-gap-sm" href="dashboard.html">Create a listing</a>
+        <p class="small section-gap-sm">Use the cart button to review your picks anytime.</p>
       </aside>
     </section>
 
-    <section class="panel card" style="margin-top:14px">
+    <section class="panel card section-gap-sm">
       <h3 class="section-title">Active listings</h3>
+      <div id="listingsLoading" class="small">Loading listings...</div>
 
-      <div id="listingsLoading" class="small">Loading listings…</div>
-
-      <table class="table" id="listingsTable" style="display:none;">
+      <table class="table" id="listingsTable" hidden>
         <thead>
           <tr>
             <th>Seller</th>
@@ -75,14 +69,13 @@
         <tbody id="listingsBody"></tbody>
       </table>
 
-      <div id="listingsEmpty" class="cart-empty" style="display:none;">
+      <div id="listingsEmpty" class="cart-empty" hidden>
         No active listings yet. Be the first to list this card.
       </div>
     </section>
 
-    <footer class="footer">© <span id="y"></span> K-Card Market</footer>
+    <footer class="footer">&copy; <span data-current-year></span> K-Card Market</footer>
   </div>
-<script>document.getElementById("y").textContent = new Date().getFullYear();</script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

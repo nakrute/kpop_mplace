@@ -10,55 +10,49 @@
   <div class="container">
     <header id="siteHeader"></header>
 
-    <main class="panel hero">
-      <div>
-        <span class="badge">Catalog + marketplace</span>
-        <h1>Find the exact photocard you want — fast.</h1>
-        <p>
-          Browse verified catalog entries (group • album • version • member • POB),
-          then compare listings across sellers in one place.
-        </p>
-
+    <main class="hero home-hero">
+      <div class="hero-copy">
+        <span class="badge">Made for collectors</span>
+        <h1>K-Card Market</h1>
+        <p>Find photocards from any band and list cards straight from your collection.</p>
         <div class="actions">
-          <a class="btn primary" href="browse.html">Browse catalog</a>
-          <a class="btn" href="dashboard.html">Start selling</a>
-          <a class="btn" href="about.html">How it works</a>
-        </div>
-
-        <div class="grid">
-          <div class="card">
-            <h3>Catalog-first</h3>
-            <p>Listings attach to a shared card entry so search stays clean.</p>
-          </div>
-          <div class="card">
-            <h3>Simple fees</h3>
-            <p>Buyer pays item + shipping, sellers get paid out automatically.</p>
-          </div>
-          <div class="card">
-            <h3>Trust signals</h3>
-            <p>Seller ratings, verified listings, and dispute support.</p>
-          </div>
+          <a class="btn primary" href="browse.html">Browse listings</a>
+          <a class="btn" href="dashboard.html">Sell a card</a>
         </div>
       </div>
-
-      <aside class="card">
-        <h3 class="section-title">Today’s snapshot</h3>
-        <div class="kpi">
-          <div class="row"><div class="lbl">Active listings</div><div class="num">2,418</div></div>
-          <div class="row"><div class="lbl">Verified items</div><div class="num">816</div></div>
-          <div class="row"><div class="lbl">Top groups</div><div class="num">SVT • SKZ • TWICE</div></div>
-        </div>
-        <div style="margin-top:14px" class="small">
-          (Demo numbers — replace with live stats later.)
-        </div>
-      </aside>
+      <img class="hero-media" src="assets/photocard-hero.png" alt="Photocards displayed in protective sleeves and a collection binder" />
     </main>
 
-    <footer class="footer">
-      © <span id="y"></span> K-Card Market · <a href="about.html">Policies</a>
-    </footer>
+    <section class="home-intro">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Simple by design</span>
+          <h2>Everything you need to start collecting.</h2>
+        </div>
+        <a class="text-link" href="login.html">Create an account</a>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature">
+          <span class="feature-number">01</span>
+          <h3>Browse any band</h3>
+          <p>Filter the live marketplace by band, card title, album, or era.</p>
+        </article>
+        <article class="feature">
+          <span class="feature-number">02</span>
+          <h3>Compare your options</h3>
+          <p>Review condition, pricing, and shipping before adding a card to your cart.</p>
+        </article>
+        <article class="feature">
+          <span class="feature-number">03</span>
+          <h3>List in minutes</h3>
+          <p>Create an account, add the card details, and manage your listing.</p>
+        </article>
+      </div>
+    </section>
+
+    <footer class="footer">&copy; <span data-current-year></span> K-Card Market</footer>
   </div>
-<script>document.getElementById("y").textContent = new Date().getFullYear();</script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

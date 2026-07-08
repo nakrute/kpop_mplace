@@ -3,48 +3,53 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dashboard · K-Card Market</title>
+  <title>Dashboard - K-Card Market</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="container">
     <header id="siteHeader"></header>
 
-    <section id="dashNeedsAuth" class="panel card" style="margin-top:18px; display:none;">
-      <h2 style="margin:0 0 8px 0;">Sign in required</h2>
-      <p class="small" style="margin:0 0 12px 0;">You need to be logged in to create and manage listings.</p>
+    <section id="dashNeedsAuth" class="panel card section-gap" hidden>
+      <h2>Sign in required</h2>
+      <p class="small card-intro">You need an account to create and manage listings.</p>
       <a class="btn primary" href="login.html">Go to Login</a>
     </section>
 
-    <section id="dashAuthed" class="two-col" style="margin-top:18px; display:none;">
+    <section id="dashAuthed" class="two-col" hidden>
       <div class="panel card">
-        <h2 style="margin:0 0 8px 0">Create a listing</h2>
-        <p class="small" style="margin:0">
-          This writes to Supabase `listings` (RLS protects other users).
+        <h2>Create a listing</h2>
+        <p class="small flush">
+          Add the details buyers need for a quick MVP listing. Listings are stored locally for now.
         </p>
 
         <form class="form" id="listingForm">
-          <input id="ls_card_id" class="input" placeholder="Card ID (Ateez 'In The Calling' Mingi)" required />
+          <div class="row">
+            <input id="ls_group_name" class="input" placeholder="Band name (e.g. aespa)" required />
+            <input id="ls_era" class="input" placeholder="Era / album (e.g. Armageddon)" />
+          </div>
 
           <div class="row">
+            <input id="ls_card_title" class="input" placeholder="Card title / version (include member if relevant)" required />
             <select id="ls_condition" class="input" required>
               <option value="Mint">Condition: Mint</option>
               <option value="Near Mint" selected>Condition: Near Mint</option>
               <option value="Good">Condition: Good</option>
               <option value="Damaged">Condition: Damaged</option>
             </select>
-              <input id="ls_price" class="input" type="number" step="0.01" min="0" placeholder="Item price (USD)" required />
           </div>
 
           <div class="row">
+            <input id="ls_price" class="input" type="number" step="0.01" min="0" placeholder="Item price (USD)" required />
             <input id="ls_ship_stamped" class="input" type="number" step="0.01" min="0" placeholder="Stamped shipping (USD)" required />
-            <input id="ls_ship_tracked" class="input" type="number" step="0.01" min="0" placeholder="Tracked shipping (USD)" required />
           </div>
 
-          <input id="ls_group_name" class="input" placeholder="Group (e.g., SEVENTEEN)" required />
-          <input id="ls_member" class="input" placeholder="Member" required />
-          <input id="ls_card_title" class="input" placeholder="Title (optional — shown on item page)" />
-          <input id="ls_image_url" class="input" placeholder="Image URL (optional)" />
+          <div class="row">
+            <input id="ls_ship_tracked" class="input" type="number" step="0.01" min="0" placeholder="Tracked shipping (USD)" required />
+            <input id="ls_image_url" class="input" placeholder="Image URL (optional)" />
+          </div>
+
+          <input id="ls_notes" class="input" placeholder="Notes (packaging, flaws, trade details)" />
 
           <button class="btn primary" type="submit">Publish listing</button>
           <div class="small" id="listingMsg"></div>
@@ -57,9 +62,8 @@
       </aside>
     </section>
 
-    <footer class="footer">© <span id="y"></span> K-Card Market</footer>
+    <footer class="footer">&copy; <span data-current-year></span> K-Card Market</footer>
   </div>
-<script>document.getElementById("y").textContent = new Date().getFullYear();</script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>
