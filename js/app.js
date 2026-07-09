@@ -4,23 +4,47 @@ import {
   getCart,
   getCurrentUser,
   getListings,
+  getRequests,
   getUsers,
   initializeStore,
+  resetDemoData,
   saveCart,
   saveListings,
+  saveRequests,
   saveUsers,
   setCurrentUser
 } from "./store.js";
 import { createId, escapeHtml, money, normalize, qs, qsa } from "./utils.js";
 
-function bestShipping(listing) {
-  const costs = [Number(listing.shippingStamped), Number(listing.shippingTracked)]
-    .filter((cost) => Number.isFinite(cost) && cost >= 0);
-  return costs.length ? Math.min(...costs) : 0;
+function listingName(listing) {
+  return [listing.group, listing.member, listing.title].filter(Boolean).join(" - ");
 }
 
-function listingTotal(listing) {
-  return (Number(listing.price) || 0) + bestShipping(listing);
+function listingMeta(listing) {
+  return [listing.era, listing.condition].filter(Boolean).join(" - ") || "Photocard";
+}
+
+function imageSrc(listing) {
+  return listing.imageUrl || "assets/photocard-hero.png";
+}
+
+function listingImage(listing, className = "thumbimg") {
+  return `<img class="${className}" src="${escapeHtml(imageSrc(listing))}" alt="${escapeHtml(listing.title)}" data-fallback-image>`;
+}
+
+function formatDate(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString(undefined, { month: "short", year: "numeric" });
+}
+
+function sellerForListing(listing) {
+  return getUsers().find((user) => user.id === listing.sellerId) ?? {
+    displayName: listing.sellerName,
+    location: "",
+    bio: "",
+    packaging: "",
+    joinedAt: listing.createdAt
+  };
 }
 
 function requireUser(needsAuth, authenticatedContent) {
@@ -38,30 +62,57 @@ function updateAuthButton() {
     : `<a class="btn" href="login.html">Login</a>`;
 }
 
-function fillBandOptions(select, selected = "") {
-  if (!select) return;
-  const bands = [...new Set(getListings()
-    .map((listing) => listing.group?.trim())
-    .filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b));
+function availabilityLabel(status) {
+  if (status === "reserved") return "Reserved";
+  if (status === "sold") return "Sold";
+  if (status === "paused") return "Paused";
+  return "Available";
+}
 
-  select.innerHTML = `<option value="">Any band</option>${bands
-    .map((band) => `<option value="${escapeHtml(band)}">${escapeHtml(band)}</option>`)
-    .join("")}`;
-  select.value = selected;
+function setListingStatus(listingId, status) {
+  const listings = getListings({ includeInactive: true });
+  const listing = listings.find((item) => item.id === listingId);
+  if (!listing) return;
+  listing.status = status;
+  saveListings(listings);
+}
+
+function requestTimeline(status) {
+  const steps = ["pending", "accepted", "completed"];
+  const activeIndex = status === "declined" ? 0 : Math.max(0, steps.indexOf(status));
+  if (status === "declined") return `<div class="timeline"><span class="active">Requested</span><span class="active">Declined</span></div>`;
+  return `<div class="timeline">${steps
+    .map((step, index) => `<span class="${index <= activeIndex ? "active" : ""}">${step === "pending" ? "Requested" : step[0].toUpperCase() + step.slice(1)}</span>`)
+    .join("")}</div>`;
+}
+
+function validateListingForm() {
+  const requiredFields = [
+    ["#ls_group_name", "Add a group name."],
+    ["#ls_member", "Add the member name."],
+    ["#ls_card_title", "Add a card title or version."]
+  ];
+  for (const [selector, message] of requiredFields) {
+    if (!qs(selector).value.trim()) return message;
+  }
+
+  if ((qs("#ls_group_name").value.trim()).length > 40) return "Keep the group name under 40 characters.";
+  if ((qs("#ls_member").value.trim()).length > 40) return "Keep the member name under 40 characters.";
+  if ((qs("#ls_card_title").value.trim()).length > 80) return "Keep the card title under 80 characters.";
+  if ((qs("#ls_notes").value.trim()).length > 240) return "Keep notes under 240 characters.";
+  if ((Number(qs("#ls_price").value) || 0) <= 0) return "Add a price greater than $0.";
+  if (!qs("#ls_image_url").value.trim()) return "Add a card image before publishing.";
+  return "";
 }
 
 function listingRow(listing) {
   return `
     <article class="panel rowitem" data-listing-id="${escapeHtml(listing.id)}">
       <a class="left" href="item.html?id=${encodeURIComponent(listing.id)}">
-        ${listing.imageUrl
-          ? `<img class="thumbimg" src="${escapeHtml(listing.imageUrl)}" alt="${escapeHtml(listing.title)}">`
-          : `<div class="thumb" aria-hidden="true"></div>`}
+        ${listingImage(listing)}
         <div>
-          <div class="title">${escapeHtml(listing.group)} - ${escapeHtml(listing.title)}</div>
-          <div class="meta">${escapeHtml(listing.era || "Photocard listing")}</div>
-          <div class="meta">${escapeHtml(listing.condition)} &middot; ${money(listing.price)} + shipping &middot; ${escapeHtml(listing.sellerName)}</div>
+          <div class="title">${escapeHtml(listingName(listing))}</div>
+          <div class="meta">${money(listing.price)} &middot; ${escapeHtml(listingMeta(listing))} &middot; ${escapeHtml(listing.sellerName)}</div>
         </div>
       </a>
       <div class="row-right">
@@ -76,24 +127,23 @@ function renderBrowse() {
   if (!list) return;
 
   const search = qs("#searchInput");
-  const band = qs("#groupFilter");
+  const maxPrice = qs("#maxPriceFilter");
   const sort = qs("#sortFilter");
   const count = qs("#resultsCount");
   const noResults = qs("#noResults");
-  fillBandOptions(band, band?.value || "");
 
   const applyFilters = () => {
     const queryValue = normalize(search?.value);
-    const bandValue = normalize(band?.value);
+    const maxPriceValue = Number(maxPrice?.value);
     const sortValue = sort?.value || "";
     const listings = getListings().filter((listing) => {
-      const searchable = normalize(`${listing.group} ${listing.title} ${listing.era} ${listing.notes}`);
+      const searchable = normalize(`${listing.group} ${listing.member} ${listing.title} ${listing.era} ${listing.notes}`);
       return (!queryValue || searchable.includes(queryValue))
-        && (!bandValue || normalize(listing.group) === bandValue);
+        && (!Number.isFinite(maxPriceValue) || !maxPrice?.value || Number(listing.price) <= maxPriceValue);
     });
 
-    if (sortValue === "price-asc") listings.sort((a, b) => listingTotal(a) - listingTotal(b));
-    if (sortValue === "price-desc") listings.sort((a, b) => listingTotal(b) - listingTotal(a));
+    if (sortValue === "price-asc") listings.sort((a, b) => Number(a.price) - Number(b.price));
+    if (sortValue === "price-desc") listings.sort((a, b) => Number(b.price) - Number(a.price));
     if (sortValue === "newest") listings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     list.innerHTML = listings.map(listingRow).join("");
@@ -101,12 +151,12 @@ function renderBrowse() {
     noResults.hidden = listings.length > 0;
   };
 
-  band?.addEventListener("change", applyFilters);
+  maxPrice?.addEventListener("input", applyFilters);
   search?.addEventListener("input", applyFilters);
   sort?.addEventListener("change", applyFilters);
   qs("#clearFiltersBtn")?.addEventListener("click", () => {
     search.value = "";
-    band.value = "";
+    maxPrice.value = "";
     sort.value = "";
     applyFilters();
   });
@@ -116,12 +166,39 @@ function renderBrowse() {
 function renderLogin() {
   const loginForm = qs("#loginForm");
   const signupForm = qs("#signupForm");
+  const googleLoginBtn = qs("#googleLoginBtn");
   if (!loginForm && !signupForm) return;
 
   if (getCurrentUser()) {
     location.href = "account.html";
     return;
   }
+
+  googleLoginBtn?.addEventListener("click", () => {
+    const users = getUsers();
+    const email = "google.demo@kcard.local";
+    let user = users.find((candidate) => candidate.email === email);
+
+    if (!user) {
+      user = {
+        id: createId("user"),
+        email,
+        password: "",
+        displayName: "Google Demo User",
+        location: "",
+        bio: "",
+        defaultStamped: 1.25,
+        defaultTracked: 4.75,
+        packaging: "Sleeve, toploader, and team bag",
+        provider: "google",
+        joinedAt: new Date().toISOString()
+      };
+      saveUsers([...users, user]);
+    }
+
+    setCurrentUser(user);
+    location.href = "account.html";
+  });
 
   loginForm?.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -155,7 +232,8 @@ function renderLogin() {
     const user = {
       id: createId("user"), email, password, displayName,
       location: "", bio: "", defaultStamped: 1.25, defaultTracked: 4.75,
-      packaging: "Sleeve, toploader, and team bag"
+      packaging: "Sleeve, toploader, and team bag",
+      joinedAt: new Date().toISOString()
     };
     saveUsers([...users, user]);
     setCurrentUser(user);
@@ -174,8 +252,6 @@ function renderAccount() {
   qs("#ac_location").value = user.location || "";
   qs("#ac_is_seller").checked = true;
   qs("#ac_bio").value = user.bio || "";
-  qs("#ac_ship_stamped").value = user.defaultStamped ?? "";
-  qs("#ac_ship_tracked").value = user.defaultTracked ?? "";
   qs("#ac_packaging").value = user.packaging || "";
 
   form.addEventListener("submit", (event) => {
@@ -187,8 +263,6 @@ function renderAccount() {
       displayName: qs("#ac_display_name").value.trim(),
       location: qs("#ac_location").value.trim(),
       bio: qs("#ac_bio").value.trim(),
-      defaultStamped: Number(qs("#ac_ship_stamped").value) || 0,
-      defaultTracked: Number(qs("#ac_ship_tracked").value) || 0,
       packaging: qs("#ac_packaging").value.trim()
     };
     saveUsers(users);
@@ -202,9 +276,70 @@ function renderDashboard() {
   if (!form) return;
   const user = requireUser(qs("#dashNeedsAuth"), qs("#dashAuthed"));
   if (!user) return;
+  const editingListingId = qs("#editingListingId");
+  const submitButton = qs("#listingSubmitBtn");
+  const cancelEditButton = qs("#cancelEditListingBtn");
+  const imageUrlInput = qs("#ls_image_url");
+  const imageFileInput = qs("#ls_image_file");
+  const imagePreview = qs("#listingImagePreview");
+  const removeImageButton = qs("#removeListingImageBtn");
+  const imageMessage = qs("#listingImageMsg");
 
-  qs("#ls_ship_stamped").value = user.defaultStamped ?? "";
-  qs("#ls_ship_tracked").value = user.defaultTracked ?? "";
+  const updateImagePreview = () => {
+    const src = imageUrlInput?.value.trim();
+    if (!imagePreview) return;
+    imagePreview.hidden = !src;
+    removeImageButton.hidden = !src;
+    imageMessage.textContent = "";
+    if (src) {
+      imagePreview.src = src;
+      imagePreview.onerror = () => {
+        imagePreview.hidden = true;
+        imageMessage.textContent = "That image could not be loaded. Try another URL or upload a file.";
+      };
+    }
+  };
+
+  imageUrlInput?.addEventListener("input", updateImagePreview);
+  imageFileInput?.addEventListener("change", () => {
+    const file = imageFileInput.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      imageMessage.textContent = "Choose an image file.";
+      imageFileInput.value = "";
+      return;
+    }
+    if (file.size > 1_500_000) {
+      imageMessage.textContent = "Choose an image under 1.5 MB for this local MVP.";
+      imageFileInput.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      imageUrlInput.value = String(reader.result || "");
+      updateImagePreview();
+    });
+    reader.readAsDataURL(file);
+  });
+
+  const resetListingForm = () => {
+    form.reset();
+    editingListingId.value = "";
+    submitButton.textContent = "Publish listing";
+    cancelEditButton.hidden = true;
+    updateImagePreview();
+  };
+
+  cancelEditButton?.addEventListener("click", resetListingForm);
+  removeImageButton?.addEventListener("click", () => {
+    imageUrlInput.value = "";
+    imageFileInput.value = "";
+    updateImagePreview();
+  });
+  qs("#resetDemoBtn")?.addEventListener("click", () => {
+    resetDemoData();
+    location.href = "index.html";
+  });
 
   const renderMyListings = () => {
     const container = qs("#myListings");
@@ -213,14 +348,16 @@ function renderDashboard() {
       ? listings.map((listing) => `
           <div class="panel rowitem">
             <div class="left">
-              <div class="thumb" aria-hidden="true"></div>
+              ${listingImage(listing)}
               <div>
-                <div class="title">${escapeHtml(listing.group)} - ${escapeHtml(listing.title)}</div>
-                <div class="meta">${money(listing.price)} &middot; ${escapeHtml(listing.status)}</div>
+                <div class="title">${escapeHtml(listingName(listing))}</div>
+                <div class="meta">${money(listing.price)} &middot; ${escapeHtml(listingMeta(listing))} &middot; ${escapeHtml(availabilityLabel(listing.status))}</div>
               </div>
             </div>
             <div class="row-right">
+              <button class="btn" type="button" data-edit-listing="${escapeHtml(listing.id)}">Edit</button>
               <button class="btn" type="button" data-toggle-listing="${escapeHtml(listing.id)}">${listing.status === "active" ? "Pause" : "Activate"}</button>
+              <button class="btn" type="button" data-sold-listing="${escapeHtml(listing.id)}">Mark sold</button>
               <button class="btn" type="button" data-delete-listing="${escapeHtml(listing.id)}">Delete</button>
             </div>
           </div>
@@ -236,6 +373,31 @@ function renderDashboard() {
         renderMyListings();
       });
     });
+    qsa("[data-edit-listing]", container).forEach((button) => {
+      button.addEventListener("click", () => {
+        const listing = getListings({ includeInactive: true }).find((item) => item.id === button.dataset.editListing);
+        if (!listing) return;
+        editingListingId.value = listing.id;
+        qs("#ls_group_name").value = listing.group || "";
+        qs("#ls_member").value = listing.member || "";
+        qs("#ls_card_title").value = listing.title || "";
+        qs("#ls_era").value = listing.era || "";
+        qs("#ls_condition").value = listing.condition || "Near Mint";
+        qs("#ls_price").value = listing.price ?? "";
+        qs("#ls_image_url").value = listing.imageUrl || "";
+        qs("#ls_notes").value = listing.notes || "";
+        submitButton.textContent = "Save listing";
+        cancelEditButton.hidden = false;
+        updateImagePreview();
+        form.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+    qsa("[data-sold-listing]", container).forEach((button) => {
+      button.addEventListener("click", () => {
+        setListingStatus(button.dataset.soldListing, "sold");
+        renderMyListings();
+      });
+    });
     qsa("[data-delete-listing]", container).forEach((button) => {
       button.addEventListener("click", () => {
         saveListings(getListings({ includeInactive: true })
@@ -245,37 +407,121 @@ function renderDashboard() {
     });
   };
 
+  const requestRow = (request, mode) => `
+    <div class="panel request-item">
+      <div>
+        <div class="title">${escapeHtml(request.listingName)}</div>
+        <div class="meta">${money(request.total)} &middot; Qty ${request.qty} &middot; ${escapeHtml(request.status)}</div>
+        <div class="small">${mode === "seller"
+          ? `Buyer: ${escapeHtml(request.buyerName)} (${escapeHtml(request.buyerEmail)})`
+          : `Seller: ${escapeHtml(request.sellerName)}`}</div>
+      </div>
+      <details class="request-detail">
+        <summary>Request details</summary>
+        ${requestTimeline(request.status)}
+        <div class="detail-grid">
+          <div><strong>Buyer</strong><span>${escapeHtml(request.buyerName || "Not provided")}</span></div>
+          <div><strong>Email</strong><span>${escapeHtml(request.buyerEmail || "Not provided")}</span></div>
+          <div><strong>Ship to</strong><span>${escapeHtml(request.buyerAddress || "Not provided")}</span></div>
+          <div><strong>Message</strong><span>${escapeHtml(request.buyerMessage || "No message added.")}</span></div>
+          <div><strong>Status</strong><span>${escapeHtml(request.status)}</span></div>
+          <div><strong>Next step</strong><span>${request.status === "accepted"
+            ? "Seller and buyer can coordinate by email."
+            : request.status === "completed"
+              ? "Request marked complete."
+              : request.status === "declined"
+                ? "Request declined."
+                : "Seller can accept or decline this request."}</span></div>
+        </div>
+      </details>
+      ${mode === "seller" ? `
+        <div class="request-actions">
+          <button class="btn" type="button" data-request-status="${escapeHtml(request.id)}" data-status-value="accepted">Accept</button>
+          <button class="btn" type="button" data-request-status="${escapeHtml(request.id)}" data-status-value="declined">Decline</button>
+          <button class="btn" type="button" data-request-status="${escapeHtml(request.id)}" data-status-value="completed">Complete</button>
+        </div>
+      ` : ""}
+    </div>
+  `;
+
+  const renderRequests = () => {
+    const requests = getRequests();
+    const sellerRequests = qs("#sellerRequests");
+    const buyerRequests = qs("#buyerRequests");
+    const incoming = requests.filter((request) => request.sellerId === user.id);
+    const outgoing = requests.filter((request) => request.buyerId === user.id || request.buyerEmail === user.email);
+
+    if (sellerRequests) {
+      sellerRequests.innerHTML = incoming.length
+        ? incoming.map((request) => requestRow(request, "seller")).join("")
+        : `<div class="cart-empty">No buyer requests yet.</div>`;
+    }
+    if (buyerRequests) {
+      buyerRequests.innerHTML = outgoing.length
+        ? outgoing.map((request) => requestRow(request, "buyer")).join("")
+        : `<div class="cart-empty">No requests sent yet.</div>`;
+    }
+
+    qsa("[data-request-status]", sellerRequests).forEach((button) => {
+      button.addEventListener("click", () => {
+        const requests = getRequests();
+        const request = requests.find((item) => item.id === button.dataset.requestStatus);
+        if (!request) return;
+        request.status = button.dataset.statusValue;
+        if (request.status === "accepted") setListingStatus(request.listingId, "reserved");
+        if (request.status === "completed") setListingStatus(request.listingId, "sold");
+        saveRequests(requests);
+        renderMyListings();
+        renderRequests();
+      });
+    });
+  };
+
   form.addEventListener("submit", (event) => {
     event.preventDefault();
+    const validationMessage = validateListingForm();
+    if (validationMessage) {
+      qs("#listingMsg").textContent = validationMessage;
+      return;
+    }
+    const existingId = editingListingId.value;
     const listing = {
-      id: createId("listing"), sellerId: user.id,
+      id: existingId || createId("listing"), sellerId: user.id,
       sellerName: user.displayName || user.email.split("@")[0],
       group: qs("#ls_group_name").value.trim(),
+      member: qs("#ls_member").value.trim(),
       title: qs("#ls_card_title").value.trim(),
-      era: qs("#ls_era").value.trim(),
       condition: qs("#ls_condition").value,
+      era: qs("#ls_era").value.trim(),
       price: Number(qs("#ls_price").value) || 0,
-      shippingStamped: Number(qs("#ls_ship_stamped").value) || 0,
-      shippingTracked: Number(qs("#ls_ship_tracked").value) || 0,
+      shippingStamped: 0,
+      shippingTracked: 0,
       imageUrl: qs("#ls_image_url").value.trim(),
       notes: qs("#ls_notes").value.trim(), status: "active",
       createdAt: new Date().toISOString()
     };
-    saveListings([listing, ...getListings({ includeInactive: true })]);
-    form.reset();
-    qs("#ls_ship_stamped").value = user.defaultStamped ?? "";
-    qs("#ls_ship_tracked").value = user.defaultTracked ?? "";
-    qs("#listingMsg").textContent = "Listing published.";
+    const listings = getListings({ includeInactive: true });
+    if (existingId) {
+      const index = listings.findIndex((item) => item.id === existingId);
+      const previous = listings[index];
+      listings[index] = { ...previous, ...listing, status: previous.status || "active", createdAt: previous.createdAt };
+      saveListings(listings);
+    } else {
+      saveListings([listing, ...listings]);
+    }
+    resetListingForm();
+    qs("#listingMsg").textContent = existingId ? "Listing saved." : "Listing published.";
     renderMyListings();
   });
   renderMyListings();
+  renderRequests();
 }
 
 function renderItem() {
   const item = qs("#itemHeader");
   if (!item) return;
   const id = new URL(location.href).searchParams.get("id");
-  const listing = getListings().find((candidate) => candidate.id === id);
+  const listing = getListings({ includeInactive: true }).find((candidate) => candidate.id === id);
   qs("#itemHeaderLoading").hidden = true;
   item.hidden = false;
 
@@ -287,21 +533,45 @@ function renderItem() {
   }
 
   qs("#itemImage").src = listing.imageUrl || "assets/photocard-hero.png";
+  qs("#itemImage").dataset.fallbackImage = "true";
   qs("#itemImage").alt = listing.title;
   qs("#itemBadge").textContent = listing.group;
-  qs("#itemTitle").textContent = listing.title;
-  qs("#itemMetaLine").textContent = [listing.era, listing.condition].filter(Boolean).join(" - ");
-  qs("#itemStats").textContent = `${money(listing.price)} item price - from ${money(listingTotal(listing))} with shipping`;
-  qs("#itemAttrs").innerHTML = `Band: ${escapeHtml(listing.group)}<br>Seller: ${escapeHtml(listing.sellerName)}`;
+  qs("#itemTitle").textContent = listingName(listing);
+  qs("#itemMetaLine").textContent = `${money(listing.price)} - ${listingMeta(listing)} - ${availabilityLabel(listing.status)}`;
+  qs("#itemAttrs").innerHTML = `
+    Group: ${escapeHtml(listing.group)}<br>
+    Member: ${escapeHtml(listing.member || "Not specified")}<br>
+    Album / era: ${escapeHtml(listing.era || "Not specified")}<br>
+    Condition: ${escapeHtml(listing.condition)}<br>
+    Notes: ${escapeHtml(listing.notes || "No notes added.")}
+  `;
+  const seller = sellerForListing(listing);
+  const sellerListings = getListings({ includeInactive: true }).filter((item) => item.sellerId === listing.sellerId);
+  const sellerCard = qs("#sellerCard");
+  if (sellerCard) {
+    sellerCard.innerHTML = `
+      <h3 class="section-title">Seller</h3>
+      <div class="seller-name">${escapeHtml(seller.displayName || listing.sellerName)}</div>
+      <div class="small">${escapeHtml(seller.location || "Location not added")}</div>
+      <div class="small">${sellerListings.length} listing${sellerListings.length === 1 ? "" : "s"}${seller.joinedAt ? ` &middot; Joined ${escapeHtml(formatDate(seller.joinedAt))}` : ""}</div>
+      <p class="small">${escapeHtml(seller.bio || "No seller bio yet.")}</p>
+      <p class="small flush">${escapeHtml(seller.packaging || "Packaging details not added.")}</p>
+    `;
+  }
   qs("#listingsLoading").hidden = true;
   qs("#listingsTable").hidden = false;
+  const currentUser = getCurrentUser();
+  const isOwnListing = currentUser?.id && currentUser.id === listing.sellerId;
   qs("#listingsBody").innerHTML = `
     <tr>
       <td>${escapeHtml(listing.sellerName)}</td>
       <td>${escapeHtml(listing.condition)}</td>
       <td>${money(listing.price)}</td>
-      <td>Stamped ${money(listing.shippingStamped)} / Tracked ${money(listing.shippingTracked)}</td>
-      <td><button class="btn primary" type="button" data-add-cart="${escapeHtml(listing.id)}">Add to cart</button></td>
+      <td>${isOwnListing
+        ? `<button class="btn" type="button" disabled>Your listing</button>`
+        : listing.status === "active"
+        ? `<button class="btn primary" type="button" data-add-cart="${escapeHtml(listing.id)}">Request to buy</button>`
+        : `<button class="btn" type="button" disabled>${escapeHtml(availabilityLabel(listing.status))}</button>`}</td>
     </tr>
   `;
 }
@@ -317,14 +587,13 @@ function renderCheckout() {
   const lines = cart.map((line) => {
     const listing = listings.find((item) => item.id === line.id);
     if (!listing) return "";
-    const shipping = line.shipping === "Tracked" ? listing.shippingTracked : listing.shippingStamped;
-    const lineTotal = (listing.price + shipping) * line.qty;
+    const lineTotal = (Number(listing.price) || 0) * line.qty;
     total += lineTotal;
     return `
       <div class="cart-row checkout-line">
         <div>
-          <strong>${escapeHtml(listing.group)} - ${escapeHtml(listing.title)}</strong>
-          <div class="small">${escapeHtml(line.shipping)} &middot; Qty ${line.qty}</div>
+          <strong>${escapeHtml(listingName(listing))}</strong>
+          <div class="small">Qty ${line.qty}</div>
         </div>
         <strong>${money(lineTotal)}</strong>
       </div>
@@ -332,7 +601,7 @@ function renderCheckout() {
   }).filter(Boolean);
 
   summary.innerHTML = lines.length
-    ? `<h2>Order summary</h2>${lines.join("")}<div class="cart-row checkout-total"><strong>Total</strong><strong>${money(total)}</strong></div>`
+    ? `<h2>Request summary</h2>${lines.join("")}<div class="cart-row checkout-total"><strong>Total</strong><strong>${money(total)}</strong></div>`
     : `<div class="cart-empty">Your cart is empty. <a href="browse.html">Browse listings</a> to add a card.</div>`;
 
   const user = getCurrentUser();
@@ -343,6 +612,49 @@ function renderCheckout() {
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     if (!cart.length) return;
+    const buyer = getCurrentUser();
+    const invalidLine = cart.find((line) => {
+      const listing = listings.find((item) => item.id === line.id);
+      return !listing || listing.status !== "active" || (buyer?.id && buyer.id === listing.sellerId);
+    });
+    if (invalidLine) {
+      window.alert("One or more cards in your request list is unavailable or belongs to you.");
+      return;
+    }
+    const buyerName = qs("#name").value.trim();
+    const buyerEmail = normalize(qs("#email").value);
+    const buyerMessage = qs("#buyerMessage").value.trim();
+    const buyerAddress = [
+      qs("#address1").value.trim(),
+      qs("#address2").value.trim(),
+      qs("#city").value.trim(),
+      qs("#state").value.trim(),
+      qs("#zip").value.trim(),
+      qs("#country").value.trim()
+    ].filter(Boolean).join(", ");
+    const newRequests = cart.map((line) => {
+      const listing = listings.find((item) => item.id === line.id);
+      if (!listing) return null;
+      const qty = line.qty;
+      const total = (Number(listing.price) || 0) * qty;
+      return {
+        id: createId("request"),
+        listingId: listing.id,
+        listingName: listingName(listing),
+        sellerId: listing.sellerId,
+        sellerName: listing.sellerName,
+        buyerId: buyer?.id || "",
+        buyerName,
+        buyerEmail,
+        buyerAddress,
+        buyerMessage,
+        qty,
+        total,
+        status: "pending",
+        createdAt: new Date().toISOString()
+      };
+    }).filter(Boolean);
+    saveRequests([...newRequests, ...getRequests()]);
     saveCart([]);
     location.href = "order-success.html";
   });
@@ -357,8 +669,22 @@ function wireGlobalActions() {
       return;
     }
     const addButton = event.target.closest("[data-add-cart]");
-    if (addButton) addToCart(addButton.dataset.addCart);
+    if (addButton) {
+      const listing = getListings({ includeInactive: true }).find((item) => item.id === addButton.dataset.addCart);
+      const user = getCurrentUser();
+      if (listing?.sellerId && user?.id === listing.sellerId) {
+        window.alert("You cannot request your own listing.");
+        return;
+      }
+      addToCart(addButton.dataset.addCart);
+    }
   });
+  document.addEventListener("error", (event) => {
+    const image = event.target;
+    if (!(image instanceof HTMLImageElement) || !image.dataset.fallbackImage) return;
+    if (image.src.endsWith("assets/photocard-hero.png")) return;
+    image.src = "assets/photocard-hero.png";
+  }, true);
 }
 
 export function initApp() {

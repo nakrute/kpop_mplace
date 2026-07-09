@@ -1,6 +1,6 @@
 # K-Card Market
 
-A browser-only MVP for buying and selling KPop photocards. Users can browse by band, create a local demo account, publish listings, manage a cart, and complete a demo checkout.
+A browser-only MVP for buying and selling KPop photocards. Users can browse by group, create a local demo account, publish listings, manage a cart, and complete a demo checkout.
 
 ## Run locally
 

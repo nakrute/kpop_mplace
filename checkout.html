@@ -11,15 +11,15 @@
     <header id="siteHeader"></header>
 
     <section class="page-head">
-      <span class="eyebrow">Checkout</span>
-      <h1>Review your order</h1>
-      <p>Confirm shipping details and complete the demo checkout.</p>
+      <span class="eyebrow">Buy request</span>
+      <h1>Request these cards</h1>
+      <p>Send a local MVP purchase request to the seller.</p>
     </section>
 
     <section class="two-col">
       <div class="panel card">
-        <h2>Shipping info</h2>
-        <p class="small flush">Stored locally in your browser for this demo.</p>
+        <h2>Buyer info</h2>
+        <p class="small flush">This creates a local request sellers can review in the dashboard.</p>
 
         <form class="form" id="checkoutForm">
           <input id="name" class="input" placeholder="Full name" required />
@@ -34,7 +34,8 @@
             <input id="zip" class="input" placeholder="ZIP" required />
             <input id="country" class="input" placeholder="Country" value="USA" required />
           </div>
-          <button class="btn primary" type="submit">Place order (demo)</button>
+          <textarea id="buyerMessage" class="input textarea" placeholder="Message to seller (optional)"></textarea>
+          <button class="btn primary" type="submit">Send buy request</button>
         </form>
       </div>
 

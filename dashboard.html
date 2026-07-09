@@ -24,34 +24,42 @@
         </p>
 
         <form class="form" id="listingForm">
+          <input id="editingListingId" type="hidden" />
           <div class="row">
-            <input id="ls_group_name" class="input" placeholder="Band name (e.g. aespa)" required />
-            <input id="ls_era" class="input" placeholder="Era / album (e.g. Armageddon)" />
+            <input id="ls_group_name" class="input" placeholder="Group name (e.g. aespa)" required />
+            <input id="ls_member" class="input" placeholder="Member (e.g. Karina)" required />
           </div>
 
           <div class="row">
-            <input id="ls_card_title" class="input" placeholder="Card title / version (include member if relevant)" required />
+            <input id="ls_card_title" class="input" placeholder="Card title / version" required />
+            <input id="ls_era" class="input" placeholder="Album / era (optional)" />
+          </div>
+
+          <div class="row">
             <select id="ls_condition" class="input" required>
               <option value="Mint">Condition: Mint</option>
               <option value="Near Mint" selected>Condition: Near Mint</option>
               <option value="Good">Condition: Good</option>
               <option value="Damaged">Condition: Damaged</option>
             </select>
+            <input id="ls_price" class="input" type="number" step="0.01" min="0" placeholder="Price (USD)" required />
           </div>
 
           <div class="row">
-            <input id="ls_price" class="input" type="number" step="0.01" min="0" placeholder="Item price (USD)" required />
-            <input id="ls_ship_stamped" class="input" type="number" step="0.01" min="0" placeholder="Stamped shipping (USD)" required />
-          </div>
-
-          <div class="row">
-            <input id="ls_ship_tracked" class="input" type="number" step="0.01" min="0" placeholder="Tracked shipping (USD)" required />
             <input id="ls_image_url" class="input" placeholder="Image URL (optional)" />
+            <input id="ls_image_file" class="input" type="file" accept="image/*" />
           </div>
+          <p class="small flush">Use a clear portrait photo of the card. Local uploads stay in this browser.</p>
+          <img id="listingImagePreview" class="image-preview" alt="Listing photo preview" hidden />
+          <button id="removeListingImageBtn" class="btn" type="button" hidden>Remove image</button>
+          <div class="small" id="listingImageMsg"></div>
 
           <input id="ls_notes" class="input" placeholder="Notes (packaging, flaws, trade details)" />
 
-          <button class="btn primary" type="submit">Publish listing</button>
+          <div class="form-actions">
+            <button class="btn primary" id="listingSubmitBtn" type="submit">Publish listing</button>
+            <button class="btn" id="cancelEditListingBtn" type="button" hidden>Cancel edit</button>
+          </div>
           <div class="small" id="listingMsg"></div>
         </form>
       </div>
@@ -59,6 +67,15 @@
       <aside class="panel card">
         <h3 class="section-title">Your listings</h3>
         <div id="myListings" class="list"></div>
+
+        <h3 class="section-title section-gap">Incoming requests</h3>
+        <div id="sellerRequests" class="list"></div>
+
+        <h3 class="section-title section-gap">Your requests</h3>
+        <div id="buyerRequests" class="list"></div>
+
+        <h3 class="section-title section-gap">Demo tools</h3>
+        <button id="resetDemoBtn" class="btn full-width" type="button">Reset demo data</button>
       </aside>
     </section>
 

@@ -26,15 +26,9 @@
             </div>
           </div>
 
-          <div class="grid item-stats">
-            <div class="card">
-              <h3>Price stats (live)</h3>
-              <p class="small" id="itemStats"></p>
-            </div>
-            <div class="card">
-              <h3>Card attributes</h3>
-              <p class="small flush" id="itemAttrs"></p>
-            </div>
+          <div class="card item-details section-gap-sm">
+            <h3>Card details</h3>
+            <p class="small flush" id="itemAttrs"></p>
           </div>
 
           <div class="chips section-gap-sm">
@@ -49,6 +43,8 @@
         <a class="btn full-width" href="browse.html">Back to browse</a>
         <a class="btn primary full-width section-gap-sm" href="dashboard.html">Create a listing</a>
         <p class="small section-gap-sm">Use the cart button to review your picks anytime.</p>
+
+        <div id="sellerCard" class="seller-card section-gap-sm"></div>
       </aside>
     </section>
 
@@ -61,8 +57,7 @@
           <tr>
             <th>Seller</th>
             <th>Condition</th>
-            <th>Item</th>
-            <th>Shipping</th>
+            <th>Price</th>
             <th></th>
           </tr>
         </thead>

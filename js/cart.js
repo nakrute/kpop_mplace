@@ -1,8 +1,8 @@
 import { getCart, getListings, saveCart } from "./store.js";
 import { escapeHtml, money, qs, qsa } from "./utils.js";
 
-function shippingCost(listing, method) {
-  return method === "Tracked" ? listing.shippingTracked : listing.shippingStamped;
+function listingName(listing) {
+  return [listing.group, listing.member, listing.title].filter(Boolean).join(" - ");
 }
 
 function updateCount() {
@@ -33,11 +33,6 @@ function removeLine(id) {
   updateCount();
 }
 
-function updateShipping(id, shipping) {
-  saveCart(getCart().map((line) => line.id === id ? { ...line, shipping } : line));
-  renderCart();
-}
-
 function renderCart() {
   const body = qs("#cartBody");
   if (!body) return;
@@ -50,23 +45,20 @@ function renderCart() {
     ? cart.map((line) => {
         const listing = listings.find((item) => item.id === line.id);
         if (!listing) return "";
-
-        const shipping = shippingCost(listing, line.shipping);
-        subtotal += (listing.price + shipping) * line.qty;
+        const lineTotal = (Number(listing.price) || 0) * line.qty;
+        subtotal += lineTotal;
 
         return `
           <div class="cart-item">
-            <div class="thumb"></div>
+            ${listing.imageUrl
+              ? `<img class="thumbimg" src="${escapeHtml(listing.imageUrl)}" alt="${escapeHtml(listing.title)}" data-fallback-image>`
+              : `<div class="thumb" aria-hidden="true"></div>`}
             <div class="ci-main">
-              <div class="ci-title">${escapeHtml(listing.group)} - ${escapeHtml(listing.title)}</div>
-              <div class="ci-meta">${money(listing.price)} &middot; ${escapeHtml(line.shipping)} ${money(shipping)} &middot; Qty ${line.qty}</div>
+              <div class="ci-title">${escapeHtml(listingName(listing))}</div>
+              <div class="ci-meta">${money(listing.price)} &middot; Qty ${line.qty}</div>
               <div class="qty">
                 <button type="button" data-cart-dec="${escapeHtml(line.id)}" aria-label="Decrease quantity">-</button>
                 <button type="button" data-cart-inc="${escapeHtml(line.id)}" aria-label="Increase quantity">+</button>
-                <select class="input" data-cart-ship="${escapeHtml(line.id)}" aria-label="Shipping method">
-                  <option ${line.shipping === "Stamped" ? "selected" : ""}>Stamped</option>
-                  <option ${line.shipping === "Tracked" ? "selected" : ""}>Tracked</option>
-                </select>
                 <button class="btn" type="button" data-cart-remove="${escapeHtml(line.id)}">Remove</button>
               </div>
             </div>
@@ -79,7 +71,6 @@ function renderCart() {
   qsa("[data-cart-inc]", body).forEach((button) => button.addEventListener("click", () => changeQuantity(button.dataset.cartInc, 1)));
   qsa("[data-cart-dec]", body).forEach((button) => button.addEventListener("click", () => changeQuantity(button.dataset.cartDec, -1)));
   qsa("[data-cart-remove]", body).forEach((button) => button.addEventListener("click", () => removeLine(button.dataset.cartRemove)));
-  qsa("[data-cart-ship]", body).forEach((select) => select.addEventListener("change", () => updateShipping(select.dataset.cartShip, select.value)));
 }
 
 function openCart() {
@@ -93,18 +84,18 @@ function ensureCartUi() {
 
   document.body.insertAdjacentHTML("beforeend", `
     <div class="cart-overlay" id="cartOverlay" hidden></div>
-    <aside class="cart-drawer" id="cartDrawer" aria-label="Shopping cart">
+    <aside class="cart-drawer" id="cartDrawer" aria-label="Buy request list">
       <div class="cart-header">
-        <strong>Your cart</strong>
+        <strong>Request list</strong>
         <button class="btn" type="button" data-close-cart>Close</button>
       </div>
       <div class="cart-body" id="cartBody"></div>
       <div class="cart-footer">
         <div class="cart-row"><span class="small">Subtotal</span><strong id="cartSubtotal">$0.00</strong></div>
-        <a class="btn primary" href="checkout.html">Checkout demo</a>
+        <a class="btn primary" href="checkout.html">Send buy request</a>
       </div>
     </aside>
-    <button class="cart-fab" type="button" id="cartFab">Cart <span class="cart-dot" id="cartCountDot">0</span></button>
+    <button class="cart-fab" type="button" id="cartFab">Requests <span class="cart-dot" id="cartCountDot">0</span></button>
   `);
 
   qs("#cartFab").addEventListener("click", openCart);
@@ -119,7 +110,7 @@ export function addToCart(id) {
   const cart = getCart();
   const existing = cart.find((line) => line.id === id);
   if (existing) existing.qty += 1;
-  else cart.push({ id, qty: 1, shipping: "Stamped" });
+  else cart.push({ id, qty: 1 });
 
   saveCart(cart);
   updateCount();
