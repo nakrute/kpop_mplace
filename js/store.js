@@ -144,13 +144,9 @@ function write(key, value) {
 }
 
 export function initializeStore() {
-  if (!localStorage.getItem(KEYS.listings)) {
-    write(KEYS.users, SEED_USERS);
-    write(KEYS.listings, SEED_LISTINGS);
-    write(KEYS.requests, []);
-    write(KEYS.schema, true);
-    return;
-  }
+  if (!localStorage.getItem(KEYS.users)) write(KEYS.users, SEED_USERS);
+  if (!localStorage.getItem(KEYS.listings)) write(KEYS.listings, SEED_LISTINGS);
+  if (!localStorage.getItem(KEYS.requests)) write(KEYS.requests, []);
 
   if (!read(KEYS.schema, false)) {
     const migrated = read(KEYS.listings, []).map((listing) => {
@@ -170,8 +166,6 @@ export function initializeStore() {
   if (missingSeedUsers.length) {
     write(KEYS.users, [...missingSeedUsers, ...users]);
   }
-  if (!localStorage.getItem(KEYS.requests)) write(KEYS.requests, []);
-
   const listings = read(KEYS.listings, []).map((listing) => ({
     member: "",
     era: "",
@@ -222,11 +216,19 @@ export function clearCurrentUser() {
 }
 
 export function getCart() {
-  return read(KEYS.cart, []);
+  return read(KEYS.cart, [])
+    .filter((line) => line && typeof line.id === "string" && Number(line.qty) > 0)
+    .map((line) => ({ id: line.id, qty: 1 }));
 }
 
 export function saveCart(cart) {
-  write(KEYS.cart, cart);
+  const uniqueLines = new Map();
+  cart.forEach((line) => {
+    if (line && typeof line.id === "string" && Number(line.qty) > 0) {
+      uniqueLines.set(line.id, { id: line.id, qty: 1 });
+    }
+  });
+  write(KEYS.cart, [...uniqueLines.values()]);
 }
 
 export function getRequests() {

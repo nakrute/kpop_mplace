@@ -18,10 +18,8 @@ function closeCart() {
   }, 180);
 }
 
-function changeQuantity(id, delta) {
-  const cart = getCart()
-    .map((line) => line.id === id ? { ...line, qty: Math.max(0, line.qty + delta) } : line)
-    .filter((line) => line.qty > 0);
+function decrementQuantity(id) {
+  const cart = getCart().filter((line) => line.id !== id);
   saveCart(cart);
   renderCart();
   updateCount();
@@ -58,7 +56,6 @@ function renderCart() {
               <div class="ci-meta">${money(listing.price)} &middot; Qty ${line.qty}</div>
               <div class="qty">
                 <button type="button" data-cart-dec="${escapeHtml(line.id)}" aria-label="Decrease quantity">-</button>
-                <button type="button" data-cart-inc="${escapeHtml(line.id)}" aria-label="Increase quantity">+</button>
                 <button class="btn" type="button" data-cart-remove="${escapeHtml(line.id)}">Remove</button>
               </div>
             </div>
@@ -68,8 +65,7 @@ function renderCart() {
     : `<div class="cart-empty">Your cart is empty.</div>`;
 
   qs("#cartSubtotal").textContent = money(subtotal);
-  qsa("[data-cart-inc]", body).forEach((button) => button.addEventListener("click", () => changeQuantity(button.dataset.cartInc, 1)));
-  qsa("[data-cart-dec]", body).forEach((button) => button.addEventListener("click", () => changeQuantity(button.dataset.cartDec, -1)));
+  qsa("[data-cart-dec]", body).forEach((button) => button.addEventListener("click", () => decrementQuantity(button.dataset.cartDec)));
   qsa("[data-cart-remove]", body).forEach((button) => button.addEventListener("click", () => removeLine(button.dataset.cartRemove)));
 }
 
@@ -108,9 +104,7 @@ export function addToCart(id) {
   if (!listing) return;
 
   const cart = getCart();
-  const existing = cart.find((line) => line.id === id);
-  if (existing) existing.qty += 1;
-  else cart.push({ id, qty: 1 });
+  if (!cart.some((line) => line.id === id)) cart.push({ id, qty: 1 });
 
   saveCart(cart);
   updateCount();

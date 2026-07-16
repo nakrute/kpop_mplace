@@ -10,6 +10,15 @@ npm run dev
 
 Then open `http://127.0.0.1:4173`.
 
+## Quality checks
+
+```powershell
+npm run check
+npm test
+```
+
+The check script validates JavaScript syntax and verifies that local page links and asset references resolve. The tests cover the localStorage data layer and its migration behavior.
+
 ## Project structure
 
 - `js/store.js` owns localStorage data and migrations.
