@@ -26,23 +26,6 @@ const store = await import("../js/store.js");
 
 test.beforeEach(() => localStorage.clear());
 
-test("initializes the demo data", () => {
-  store.initializeStore();
-  assert.equal(store.getUsers().length, 4);
-  assert.equal(store.getListings().length, 4);
-  assert.deepEqual(store.getRequests(), []);
-});
-
-test("does not overwrite existing users when listings are missing", () => {
-  const user = { id: "local-user", email: "collector@example.com", displayName: "collector" };
-  store.saveUsers([user]);
-
-  store.initializeStore();
-
-  assert.equal(store.getUsers().some((candidate) => candidate.id === user.id), true);
-  assert.equal(store.getListings().length, 4);
-});
-
 test("normalizes the cart to one line per one-of-a-kind listing", () => {
   store.saveCart([
     { id: "card-1", qty: 3 },

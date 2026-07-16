@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/serve.cjs",
+    "start": "node scripts/serve.cjs",
     "check": "node scripts/check.cjs",
     "test": "node --test"
   }

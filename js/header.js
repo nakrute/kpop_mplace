@@ -22,6 +22,7 @@ function renderHeader() {
     </nav>
 
     <div class="nav-cta">
+      <button class="btn" type="button" data-theme-toggle aria-label="Switch color theme">Dark mode</button>
       <div id="authBtnSlot"><a class="btn" href="login.html">Login</a></div>
       <a class="btn primary" href="dashboard.html">List a card</a>
     </div>

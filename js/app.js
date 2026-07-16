@@ -1,20 +1,23 @@
 import { addToCart, initCart } from "./cart.js";
 import {
   clearCurrentUser,
+  createBuyRequests,
+  createListing,
+  deleteListing,
   getCart,
   getCurrentUser,
   getListings,
   getRequests,
   getUsers,
   initializeStore,
-  resetDemoData,
+  login,
   saveCart,
-  saveListings,
-  saveRequests,
-  saveUsers,
-  setCurrentUser
+  signup,
+  updateListing,
+  updateProfile,
+  updateRequestStatus
 } from "./store.js";
-import { createId, escapeHtml, money, normalize, qs, qsa } from "./utils.js";
+import { escapeHtml, money, normalize, qs, qsa } from "./utils.js";
 
 function listingName(listing) {
   return [listing.group, listing.member, listing.title].filter(Boolean).join(" - ");
@@ -67,14 +70,6 @@ function availabilityLabel(status) {
   if (status === "sold") return "Sold";
   if (status === "paused") return "Paused";
   return "Available";
-}
-
-function setListingStatus(listingId, status) {
-  const listings = getListings({ includeInactive: true });
-  const listing = listings.find((item) => item.id === listingId);
-  if (!listing) return;
-  listing.status = status;
-  saveListings(listings);
 }
 
 function requestTimeline(status) {
@@ -166,7 +161,6 @@ function renderBrowse() {
 function renderLogin() {
   const loginForm = qs("#loginForm");
   const signupForm = qs("#signupForm");
-  const googleLoginBtn = qs("#googleLoginBtn");
   if (!loginForm && !signupForm) return;
 
   if (getCurrentUser()) {
@@ -174,70 +168,34 @@ function renderLogin() {
     return;
   }
 
-  googleLoginBtn?.addEventListener("click", () => {
-    const users = getUsers();
-    const email = "google.demo@kcard.local";
-    let user = users.find((candidate) => candidate.email === email);
-
-    if (!user) {
-      user = {
-        id: createId("user"),
-        email,
-        password: "",
-        displayName: "Google Demo User",
-        location: "",
-        bio: "",
-        defaultStamped: 1.25,
-        defaultTracked: 4.75,
-        packaging: "Sleeve, toploader, and team bag",
-        provider: "google",
-        joinedAt: new Date().toISOString()
-      };
-      saveUsers([...users, user]);
-    }
-
-    setCurrentUser(user);
-    location.href = "account.html";
-  });
-
-  loginForm?.addEventListener("submit", (event) => {
+  loginForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const email = normalize(qs("#li_email").value);
     const password = qs("#li_password").value;
-    const user = getUsers().find((candidate) => candidate.email === email && candidate.password === password);
-    if (!user) {
-      qs("#loginMsg").textContent = "No matching account. Check your email and password.";
-      return;
+    try {
+      await login(email, password);
+      location.href = "account.html";
+    } catch (error) {
+      qs("#loginMsg").textContent = error.message;
     }
-    setCurrentUser(user);
-    location.href = "account.html";
   });
 
-  signupForm?.addEventListener("submit", (event) => {
+  signupForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const users = getUsers();
     const email = normalize(qs("#su_email").value);
     const password = qs("#su_password").value;
     const displayName = qs("#su_display_name").value.trim() || email.split("@")[0];
 
-    if (password.length < 6) {
-      qs("#signupMsg").textContent = "Use at least 6 characters for the password.";
+    if (password.length < 8) {
+      qs("#signupMsg").textContent = "Use at least 8 characters for the password.";
       return;
     }
-    if (users.some((user) => user.email === email)) {
-      qs("#signupMsg").textContent = "That email already has an account.";
-      return;
+    try {
+      await signup(displayName, email, password);
+      location.href = "account.html";
+    } catch (error) {
+      qs("#signupMsg").textContent = error.message;
     }
-
-    const user = {
-      id: createId("user"), email, password, displayName,
-      location: "", bio: "", defaultStamped: 1.25, defaultTracked: 4.75,
-      packaging: "Sleeve, toploader, and team bag",
-      joinedAt: new Date().toISOString()
-    };
-    saveUsers([...users, user]);
-    setCurrentUser(user);
-    location.href = "account.html";
   });
 }
 
@@ -254,20 +212,20 @@ function renderAccount() {
   qs("#ac_bio").value = user.bio || "";
   qs("#ac_packaging").value = user.packaging || "";
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const users = getUsers();
-    const index = users.findIndex((candidate) => candidate.id === user.id);
-    users[index] = {
-      ...users[index],
+    try {
+      await updateProfile({
       displayName: qs("#ac_display_name").value.trim(),
       location: qs("#ac_location").value.trim(),
       bio: qs("#ac_bio").value.trim(),
       packaging: qs("#ac_packaging").value.trim()
-    };
-    saveUsers(users);
-    qs("#accountMsg").textContent = "Profile saved.";
-    updateAuthButton();
+      });
+      qs("#accountMsg").textContent = "Profile saved.";
+      updateAuthButton();
+    } catch (error) {
+      qs("#accountMsg").textContent = error.message;
+    }
   });
 }
 
@@ -309,8 +267,8 @@ function renderDashboard() {
       imageFileInput.value = "";
       return;
     }
-    if (file.size > 1_500_000) {
-      imageMessage.textContent = "Choose an image under 1.5 MB for this local MVP.";
+    if (file.size > 750_000) {
+      imageMessage.textContent = "Choose an image under 750 KB.";
       imageFileInput.value = "";
       return;
     }
@@ -336,10 +294,7 @@ function renderDashboard() {
     imageFileInput.value = "";
     updateImagePreview();
   });
-  qs("#resetDemoBtn")?.addEventListener("click", () => {
-    resetDemoData();
-    location.href = "index.html";
-  });
+  qs("#resetDemoBtn")?.remove();
 
   const renderMyListings = () => {
     const container = qs("#myListings");
@@ -365,12 +320,13 @@ function renderDashboard() {
       : `<div class="cart-empty">No listings yet. Create your first photocard listing here.</div>`;
 
     qsa("[data-toggle-listing]", container).forEach((button) => {
-      button.addEventListener("click", () => {
-        const allListings = getListings({ includeInactive: true });
-        const listing = allListings.find((item) => item.id === button.dataset.toggleListing);
-        listing.status = listing.status === "active" ? "paused" : "active";
-        saveListings(allListings);
-        renderMyListings();
+      button.addEventListener("click", async () => {
+        const listing = getListings({ includeInactive: true }).find((item) => item.id === button.dataset.toggleListing);
+        if (!listing) return;
+        try {
+          await updateListing(listing.id, { status: listing.status === "active" ? "paused" : "active" });
+          renderMyListings();
+        } catch (error) { window.alert(error.message); }
       });
     });
     qsa("[data-edit-listing]", container).forEach((button) => {
@@ -393,16 +349,19 @@ function renderDashboard() {
       });
     });
     qsa("[data-sold-listing]", container).forEach((button) => {
-      button.addEventListener("click", () => {
-        setListingStatus(button.dataset.soldListing, "sold");
-        renderMyListings();
+      button.addEventListener("click", async () => {
+        try {
+          await updateListing(button.dataset.soldListing, { status: "sold" });
+          renderMyListings();
+        } catch (error) { window.alert(error.message); }
       });
     });
     qsa("[data-delete-listing]", container).forEach((button) => {
-      button.addEventListener("click", () => {
-        saveListings(getListings({ includeInactive: true })
-          .filter((listing) => listing.id !== button.dataset.deleteListing));
-        renderMyListings();
+      button.addEventListener("click", async () => {
+        try {
+          await deleteListing(button.dataset.deleteListing);
+          renderMyListings();
+        } catch (error) { window.alert(error.message); }
       });
     });
   };
@@ -463,21 +422,17 @@ function renderDashboard() {
     }
 
     qsa("[data-request-status]", sellerRequests).forEach((button) => {
-      button.addEventListener("click", () => {
-        const requests = getRequests();
-        const request = requests.find((item) => item.id === button.dataset.requestStatus);
-        if (!request) return;
-        request.status = button.dataset.statusValue;
-        if (request.status === "accepted") setListingStatus(request.listingId, "reserved");
-        if (request.status === "completed") setListingStatus(request.listingId, "sold");
-        saveRequests(requests);
-        renderMyListings();
-        renderRequests();
+      button.addEventListener("click", async () => {
+        try {
+          await updateRequestStatus(button.dataset.requestStatus, button.dataset.statusValue);
+          renderMyListings();
+          renderRequests();
+        } catch (error) { window.alert(error.message); }
       });
     });
   };
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const validationMessage = validateListingForm();
     if (validationMessage) {
@@ -486,8 +441,6 @@ function renderDashboard() {
     }
     const existingId = editingListingId.value;
     const listing = {
-      id: existingId || createId("listing"), sellerId: user.id,
-      sellerName: user.displayName || user.email.split("@")[0],
       group: qs("#ls_group_name").value.trim(),
       member: qs("#ls_member").value.trim(),
       title: qs("#ls_card_title").value.trim(),
@@ -497,21 +450,21 @@ function renderDashboard() {
       shippingStamped: 0,
       shippingTracked: 0,
       imageUrl: qs("#ls_image_url").value.trim(),
-      notes: qs("#ls_notes").value.trim(), status: "active",
-      createdAt: new Date().toISOString()
+      notes: qs("#ls_notes").value.trim(), status: "active"
     };
-    const listings = getListings({ includeInactive: true });
-    if (existingId) {
-      const index = listings.findIndex((item) => item.id === existingId);
-      const previous = listings[index];
-      listings[index] = { ...previous, ...listing, status: previous.status || "active", createdAt: previous.createdAt };
-      saveListings(listings);
-    } else {
-      saveListings([listing, ...listings]);
+    try {
+      if (existingId) {
+        const previous = getListings({ includeInactive: true }).find((item) => item.id === existingId);
+        await updateListing(existingId, { ...listing, status: previous?.status || "active" });
+      } else {
+        await createListing(listing);
+      }
+      resetListingForm();
+      qs("#listingMsg").textContent = existingId ? "Listing saved." : "Listing published.";
+      renderMyListings();
+    } catch (error) {
+      qs("#listingMsg").textContent = error.message;
     }
-    resetListingForm();
-    qs("#listingMsg").textContent = existingId ? "Listing saved." : "Listing published.";
-    renderMyListings();
   });
   renderMyListings();
   renderRequests();
@@ -609,10 +562,15 @@ function renderCheckout() {
     qs("#email").value = user.email;
     qs("#name").value = user.displayName || "";
   }
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!cart.length) return;
     const buyer = getCurrentUser();
+    if (!buyer) {
+      window.alert("Sign in before sending a buy request.");
+      location.href = "login.html";
+      return;
+    }
     const invalidLine = cart.find((line) => {
       const listing = listings.find((item) => item.id === line.id);
       return !listing || listing.status !== "active" || (buyer?.id && buyer.id === listing.sellerId);
@@ -621,8 +579,6 @@ function renderCheckout() {
       window.alert("One or more cards in your request list is unavailable or belongs to you.");
       return;
     }
-    const buyerName = qs("#name").value.trim();
-    const buyerEmail = normalize(qs("#email").value);
     const buyerMessage = qs("#buyerMessage").value.trim();
     const buyerAddress = [
       qs("#address1").value.trim(),
@@ -632,40 +588,22 @@ function renderCheckout() {
       qs("#zip").value.trim(),
       qs("#country").value.trim()
     ].filter(Boolean).join(", ");
-    const newRequests = cart.map((line) => {
-      const listing = listings.find((item) => item.id === line.id);
-      if (!listing) return null;
-      const qty = line.qty;
-      const total = (Number(listing.price) || 0) * qty;
-      return {
-        id: createId("request"),
-        listingId: listing.id,
-        listingName: listingName(listing),
-        sellerId: listing.sellerId,
-        sellerName: listing.sellerName,
-        buyerId: buyer?.id || "",
-        buyerName,
-        buyerEmail,
-        buyerAddress,
-        buyerMessage,
-        qty,
-        total,
-        status: "pending",
-        createdAt: new Date().toISOString()
-      };
-    }).filter(Boolean);
-    saveRequests([...newRequests, ...getRequests()]);
-    saveCart([]);
-    location.href = "order-success.html";
+    const requestedListings = cart.map((line) => listings.find((item) => item.id === line.id)).filter(Boolean);
+    try {
+      await createBuyRequests(requestedListings, { buyerAddress, buyerMessage });
+      saveCart([]);
+      location.href = "order-success.html";
+    } catch (error) {
+      window.alert(error.message);
+    }
   });
 }
 
 function wireGlobalActions() {
-  document.addEventListener("click", (event) => {
+  document.addEventListener("click", async (event) => {
     const logout = event.target.closest("[data-logout]");
     if (logout) {
-      clearCurrentUser();
-      location.href = "index.html";
+      try { await clearCurrentUser(); } finally { location.href = "index.html"; }
       return;
     }
     const addButton = event.target.closest("[data-add-cart]");
@@ -687,8 +625,14 @@ function wireGlobalActions() {
   }, true);
 }
 
-export function initApp() {
-  initializeStore();
+export async function initApp() {
+  try {
+    await initializeStore();
+  } catch (error) {
+    console.error(error);
+    document.body.insertAdjacentHTML("afterbegin", `<div class="panel small">The marketplace could not connect to the server. Please refresh and try again.</div>`);
+    return;
+  }
   initCart();
   updateAuthButton();
   wireGlobalActions();

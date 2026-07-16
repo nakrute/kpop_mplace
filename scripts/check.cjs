@@ -7,7 +7,10 @@ const sourceFiles = [
   ...fs.readdirSync(path.join(root, "js"), { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith(".js"))
     .map((entry) => path.join(root, "js", entry.name)),
-  path.join(root, "scripts", "serve.cjs")
+  path.join(root, "scripts", "serve.cjs"),
+  ...fs.readdirSync(path.join(root, "server"), { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".cjs"))
+    .map((entry) => path.join(root, "server", entry.name))
 ];
 
 for (const file of sourceFiles) {

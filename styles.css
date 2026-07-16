@@ -10,10 +10,38 @@
   --teal: #087f72;
   --border: #dfe2e5;
   --border-strong: #c8ccd0;
+  --surface-glass: rgba(255, 255, 255, 0.82);
+  --surface-subtle: #fafafa;
+  --surface-disabled: #e9ebed;
+  --text-soft: #4e5358;
+  --placeholder: #91969b;
+  --overlay: rgba(14, 16, 18, 0.42);
   --shadow: 0 12px 32px rgba(22, 25, 28, 0.08);
   --radius: 8px;
   --max: 1180px;
   --pad: 22px;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111315;
+  --panel: #191c1f;
+  --panel-soft: #22262a;
+  --text: #f2f4f5;
+  --muted: #abb1b7;
+  --brand: #ff617b;
+  --brand-dark: #ee4965;
+  --brand-soft: #3a2027;
+  --teal: #55c7b9;
+  --border: #34393e;
+  --border-strong: #4b5258;
+  --surface-glass: rgba(25, 28, 31, 0.9);
+  --surface-subtle: #15181a;
+  --surface-disabled: #2b3034;
+  --text-soft: #c5cacf;
+  --placeholder: #858c92;
+  --overlay: rgba(0, 0, 0, 0.62);
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
 }
 
 * {
@@ -118,7 +146,7 @@ p {
   padding: 4px 9px;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--surface-glass);
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 700;
@@ -134,7 +162,7 @@ p {
   min-height: 64px;
   padding: 10px 12px;
   background: var(--panel);
-  border-color: rgba(210, 214, 218, 0.9);
+  border-color: var(--border);
   box-shadow: 0 8px 24px rgba(22, 25, 28, 0.06);
 }
 
@@ -284,6 +312,11 @@ p {
   background-image: url("assets/photocard-hero.png");
   background-position: center;
   background-size: cover;
+  color: #17191b;
+}
+
+.home-hero .hero-copy p {
+  color: #4e5358;
 }
 
 .hero-copy {
@@ -310,7 +343,7 @@ p {
 .hero p {
   max-width: 440px;
   margin: 0;
-  color: #4e5358;
+  color: var(--text-soft);
   font-size: 1.08rem;
 }
 
@@ -457,7 +490,7 @@ textarea {
 }
 
 .input::placeholder {
-  color: #91969b;
+  color: var(--placeholder);
 }
 
 .input:focus,
@@ -517,7 +550,7 @@ textarea:focus {
   flex: 0 0 58px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background-color: #e9ebed;
+  background-color: var(--surface-disabled);
   object-fit: cover;
 }
 
@@ -663,11 +696,11 @@ textarea:focus {
 .google-btn {
   gap: 10px;
   border-color: var(--border-strong);
-  background: #ffffff;
+  background: var(--panel);
 }
 
 .google-btn:hover {
-  background: #fafafa;
+  background: var(--surface-subtle);
 }
 
 .google-mark {
@@ -769,7 +802,7 @@ textarea:focus {
   padding: 16px;
   border: 1px dashed var(--border-strong);
   border-radius: var(--radius);
-  background: #fafafa;
+  background: var(--surface-subtle);
   color: var(--muted);
 }
 
@@ -807,7 +840,7 @@ textarea:focus {
   position: fixed;
   inset: 0;
   z-index: 9998;
-  background: rgba(14, 16, 18, 0.42);
+  background: var(--overlay);
 }
 
 .cart-drawer {
@@ -995,6 +1028,7 @@ textarea:focus {
     min-height: 0;
     padding: 28px 22px 0;
     background-image: none;
+    color: var(--text);
   }
 
   .hero-copy {
@@ -1007,7 +1041,7 @@ textarea:focus {
 
   .hero p {
     max-width: 330px;
-    color: #33373a;
+    color: var(--text-soft);
   }
 
   .hero-media {
