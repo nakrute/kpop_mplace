@@ -969,20 +969,23 @@ textarea:focus {
     flex-wrap: wrap;
   }
 
-  .hamburger {
+  .nav.enhanced .hamburger {
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
 
   .navlinks {
-    display: none;
     order: 4;
     width: 100%;
     padding-top: 8px;
   }
 
-  .nav.open .navlinks {
+  .nav.enhanced .navlinks {
+    display: none;
+  }
+
+  .nav.enhanced.open .navlinks {
     display: flex;
   }
 
